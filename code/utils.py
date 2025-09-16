@@ -16,9 +16,9 @@ def get_project_paths():
     parent_dir = os.path.dirname(code_dir)
     
     # Define paths relative to the parent directory
-    data_dir = os.path.join(parent_dir, 'Data')
-    plots_dir = os.path.join(parent_dir, 'Output', 'Plots')
-    tables_dir = os.path.join(parent_dir, 'Output', 'Tables')
+    data_dir = os.path.join(parent_dir, 'Data/')
+    plots_dir = os.path.join(parent_dir, 'Output', 'Plots/')
+    tables_dir = os.path.join(parent_dir, 'Output', 'Tables/')
     
     return {
         'parent_dir': parent_dir,
