@@ -32,6 +32,21 @@ def summary_statistics(data):
     summary_cols = ['sex', 'yob', 'g2000', 'g2002', 'g2004', 'p2000', 'p2002', 'voted', 'treatment_control', 'treatment_self', 'treatment_civic duty', 'treatment_neighbors', 'treatment_hawthorne']
     summary_data = data[summary_cols]
 
+    # Rename columns to be cleaner (NO underscores for LaTeX)
+    summary_data = summary_data.rename(columns={
+        'treatment_control': 'Control',
+        'treatment_self': 'Self',
+        'treatment_civic duty': 'Civic Duty',
+        'treatment_neighbors': 'Neighbors',
+        'treatment_hawthorne': 'Hawthorne',
+        'yob': 'Year of Birth',
+        'g2000': 'Voted in 2000 General Elections',
+        'g2002': 'Voted in 2002 General Elections',
+        'g2004': 'Voted in 2004 General Elections',
+        'p2000': 'Voted in 2000 Primary Elections',
+        'p2002': 'Voted in 2002 Primary Elections',
+    })
+
     basic_stats = summary_data.describe(include='all')
     
     # Remove quartile rows (25%, 50%, 75%)
@@ -39,9 +54,9 @@ def summary_statistics(data):
     basic_stats = basic_stats.drop(index=rows_to_drop, errors='ignore')
     
     # Add counts of 0s and 1s for binary variables
-    binary_cols = ['voted', 'treatment_control', 'treatment_self', 
-                   'treatment_civic duty', 'treatment_neighbors', 'treatment_hawthorne',
-                   'g2000', 'g2002', 'g2004', 'p2000', 'p2002']  # Added other binary columns
+    binary_cols = ['sex', 'voted', 'Control', 'Self', 'Civic Duty', 'Neighbors', 'Hawthorne',
+                   'Voted in 2000 General Elections', 'Voted in 2002 General Elections', 'Voted in 2004 General Elections',
+                   'Voted in 2000 Primary Elections', 'Voted in 2002 Primary Elections']
     
     # Add count_0 and count_1 rows
     count_0 = pd.Series(index=basic_stats.columns)
@@ -53,8 +68,8 @@ def summary_statistics(data):
             count_1[col] = (summary_data[col] == 1).sum()
     
     # Add the new rows to the summary statistics
-    basic_stats.loc['count_0'] = count_0
-    basic_stats.loc['count_1'] = count_1
+    basic_stats.loc['Zeros'] = count_0
+    basic_stats.loc['Ones'] = count_1
     
     latex_output = basic_stats.to_latex(
         caption='Summary Statistics',
