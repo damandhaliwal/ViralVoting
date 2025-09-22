@@ -1,16 +1,12 @@
+from data_clean import clean_data
 from utils import get_project_paths
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-path = get_project_paths()
-
-data = pd.read_csv(path['data'] + 'social.csv')
-
 # print summary statistics of the data with a few variables
-def summary_statistics(data):
+def summary_statistics():
     """
     Prints summary statistics of the data with a few variables.
     
@@ -18,7 +14,7 @@ def summary_statistics(data):
         data (pd.DataFrame): The input DataFrame containing the data.
     """
 
-    data = data.copy()
+    data = clean_data()
 
     # Convert voted from yes/no to 1/0
     data['voted'] = data['voted'].map({'yes': 1, 'no': 0})
@@ -80,9 +76,7 @@ def summary_statistics(data):
         float_format='%.2f'
     )
 
-    with open(path['tables'] + 'table1.tex', 'w') as f:
+    paths = get_project_paths()
+    with open(paths['tables'] + 'table1.tex', 'w') as f:
         f.write(latex_output)
-
-summary_statistics(data)
-
 

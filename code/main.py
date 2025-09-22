@@ -6,12 +6,8 @@ from lasso import generate_lasso_table, create_lasso_coefficient_plot, create_la
 import utils
 import pandas as pd
 
-# load data
-path = utils.get_project_paths()
-data = pd.read_csv(path['data'] + 'social.csv')
-
 # print summary statistics of key variables
-summary_statistics(data)
+summary_statistics()
 
 # run all regression analyses
 generate_regression_table()
