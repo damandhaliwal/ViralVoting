@@ -3,29 +3,29 @@
 \toprule
 \textbf{Dep. Variable:}        &      voted       & \textbf{  R-squared:         } &      0.054   \\
 \textbf{Model:}                &       OLS        & \textbf{  Adj. R-squared:    } &      0.054   \\
-\textbf{Method:}               &  Least Squares   & \textbf{  F-statistic:       } &      1961.   \\
-\textbf{Date:}                 & Sun, 21 Sep 2025 & \textbf{  Prob (F-statistic):} &      0.00    \\
-\textbf{Time:}                 &     18:26:48     & \textbf{  Log-Likelihood:    } & -2.1513e+05  \\
+\textbf{Method:}               &  Least Squares   & \textbf{  F-statistic:       } &      2245.   \\
+\textbf{Date:}                 & Tue, 23 Sep 2025 & \textbf{  Prob (F-statistic):} &      0.00    \\
+\textbf{Time:}                 &     11:34:33     & \textbf{  Log-Likelihood:    } & -2.1513e+05  \\
 \textbf{No. Observations:}     &      344084      & \textbf{  AIC:               } &  4.303e+05   \\
 \textbf{Df Residuals:}         &      344073      & \textbf{  BIC:               } &  4.304e+05   \\
 \textbf{Df Model:}             &          10      & \textbf{                     } &              \\
-\textbf{Covariance Type:}      &    nonrobust     & \textbf{                     } &              \\
+\textbf{Covariance Type:}      &       HC1        & \textbf{                     } &              \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                               & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                               & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{treatment\_civic duty} &       0.0181  &        0.003     &     7.163  &         0.000        &        0.013    &        0.023     \\
-\textbf{treatment\_hawthorne}  &       0.0254  &        0.003     &    10.031  &         0.000        &        0.020    &        0.030     \\
-\textbf{treatment\_neighbors}  &       0.0815  &        0.003     &    32.168  &         0.000        &        0.077    &        0.086     \\
-\textbf{treatment\_self}       &       0.0482  &        0.003     &    19.035  &         0.000        &        0.043    &        0.053     \\
+\textbf{treatment\_civic duty} &       0.0181  &        0.003     &     7.176  &         0.000        &        0.013    &        0.023     \\
+\textbf{treatment\_hawthorne}  &       0.0254  &        0.003     &    10.011  &         0.000        &        0.020    &        0.030     \\
+\textbf{treatment\_neighbors}  &       0.0815  &        0.003     &    31.102  &         0.000        &        0.076    &        0.087     \\
+\textbf{treatment\_self}       &       0.0482  &        0.003     &    18.701  &         0.000        &        0.043    &        0.053     \\
 \textbf{sex}                   &      -0.0059  &        0.002     &    -3.817  &         0.000        &       -0.009    &       -0.003     \\
-\textbf{yob}                   &      -0.0026  &     5.87e-05     &   -44.344  &         0.000        &       -0.003    &       -0.002     \\
-\textbf{g2000}                 &      -0.0238  &        0.002     &    -9.832  &         0.000        &       -0.029    &       -0.019     \\
-\textbf{g2002}                 &       0.0979  &        0.002     &    43.794  &         0.000        &        0.094    &        0.102     \\
-\textbf{g2004}                 &       5.2626  &        0.116     &    45.474  &         0.000        &        5.036    &        5.489     \\
-\textbf{p2000}                 &       0.0959  &        0.002     &    52.781  &         0.000        &        0.092    &        0.099     \\
-\textbf{p2002}                 &       0.1149  &        0.002     &    70.153  &         0.000        &        0.112    &        0.118     \\
+\textbf{yob}                   &      -0.0026  &     5.97e-05     &   -43.618  &         0.000        &       -0.003    &       -0.002     \\
+\textbf{g2000}                 &      -0.0238  &        0.002     &   -10.203  &         0.000        &       -0.028    &       -0.019     \\
+\textbf{g2002}                 &       0.0979  &        0.002     &    47.363  &         0.000        &        0.094    &        0.102     \\
+\textbf{g2004}                 &       5.2626  &        0.118     &    44.654  &         0.000        &        5.032    &        5.494     \\
+\textbf{p2000}                 &       0.0959  &        0.002     &    50.105  &         0.000        &        0.092    &        0.100     \\
+\textbf{p2002}                 &       0.1149  &        0.002     &    67.454  &         0.000        &        0.112    &        0.118     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
@@ -39,6 +39,6 @@
 \end{center}
 
 Notes: \newline
- [1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
+ [1] Standard Errors are heteroscedasticity robust (HC1) \newline
  [2] The condition number is large, 2.94e+05. This might indicate that there are \newline
  strong multicollinearity or other numerical problems.

@@ -45,8 +45,9 @@ def run_ridge_analysis():
     X_train_scaled = (X_train - train_mean) / train_std
     X_test_scaled = (X_test - train_mean) / train_std  # Use training parameters
     
-    # Set up regularization parameters (100 values from 10^-4 to 10^3)
-    lambdas = np.logspace(-4, 3, 100)
+    # Set up regularization parameters (100 values from 10^-6 to 10^6)
+    # Expanded range to match ISLR-style plots
+    lambdas = np.logspace(-6, 6, 100)
     Cs = 1 / lambdas  # LogisticRegression uses C = 1/lambda
     
     # Fit Ridge logistic regression with 5-fold CV to find optimal C
@@ -234,9 +235,13 @@ def create_coefficient_and_error_plots(results, paths):
     ax1.legend(loc='upper left', fontsize=9, framealpha=0.95)
     ax1.grid(True, alpha=0.3)
     
-    # Set y-axis limits to show full range
+    # Set y-axis limits to show full range including shrinkage
+    # Look at the full range of coefficients across all lambdas
     max_abs_coef = np.abs(coefficients_path).max()
-    ax1.set_ylim([-max_abs_coef*1.1, max_abs_coef*1.1])
+    ax1.set_ylim([-max_abs_coef*1.2, max_abs_coef*1.2])
+    
+    # Set x-axis limits to show full lambda range
+    ax1.set_xlim([np.log(actual_lambdas).min(), np.log(actual_lambdas).max()])
     
     plt.tight_layout()
     plt.savefig(paths['plots'] + 'ridge_coefficients.png', dpi=300, bbox_inches='tight')
@@ -278,6 +283,17 @@ def create_coefficient_and_error_plots(results, paths):
     ax2.set_title('Ridge Regression: Cross-Validation Error', fontsize=16, fontweight='bold')
     ax2.legend(loc='upper right', fontsize=11)
     ax2.grid(True, alpha=0.3)
+    
+    # Set x-axis limits to match coefficient plot
+    ax2.set_xlim([np.log(actual_lambdas).min(), np.log(actual_lambdas).max()])
+    
+    # Allow y-axis to show the full range of variation
+    # Don't force it to zoom in too much
+    y_range = cv_means_positive.max() - cv_means_positive.min()
+    if y_range < 0.01:  # If range is very small
+        # Add some padding to show the pattern better
+        y_center = (cv_means_positive.max() + cv_means_positive.min()) / 2
+        ax2.set_ylim([y_center - 0.005, y_center + 0.005])
     
     plt.tight_layout()
     plt.savefig(paths['plots'] + 'ridge_cv_error.png', dpi=300, bbox_inches='tight')

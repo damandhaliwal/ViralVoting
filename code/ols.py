@@ -32,7 +32,7 @@ def run_ols_analysis():
     X = sm.add_constant(X)
 
     # Run OLS regression
-    model = sm.OLS(y, X).fit()
+    model = sm.OLS(y, X).fit(cov_type = 'HC1')
 
     return {
         'model': model,
