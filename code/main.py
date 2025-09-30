@@ -1,7 +1,7 @@
 # Replication code for ECO1465 Term Project
 from analysis import summary_statistics
 from ols import generate_regression_table
-from trees import regression_tree, classification_tree, random_forest_classifier
+from tree_forest import regression_tree, classification_tree, random_forest_classifier
 import utils
 import pandas as pd
 

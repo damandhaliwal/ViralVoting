@@ -1,17 +1,14 @@
-"""Regression tree utilities for the social pressure voting data.
-
-Refactored for efficiency and maintainability.
-"""
-
 from sklearn.tree import DecisionTreeRegressor as DTR, DecisionTreeClassifier as DTC, plot_tree
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import mean_squared_error, accuracy_score, log_loss
+from sklearn.metrics import mean_squared_error, accuracy_score, log_loss, root_mean_squared_error
 from data_clean import clean_data
 from utils import get_project_paths, select_features, prepare_features, subsample_data
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from typing import Literal, Optional
+from sklearn.model_selection import train_test_split
+
 
 def save_tree_plot(
     model,
@@ -99,6 +96,12 @@ def regression_tree(
     feature_names = list(X_df.columns)
     X = X_df.values
 
+    X_train,X_test,y_train,y_test = train_test_split(
+                                                      X,y,
+                                                      test_size=0.2,
+                                                      random_state=42,
+                                                      stratify=y)
+
     # Fit regression tree
     tree = DTR(
         criterion="squared_error",
@@ -106,11 +109,12 @@ def regression_tree(
         min_samples_leaf=min_samples_leaf,
         random_state=random_state,
     )
-    tree.fit(X, y)
+    tree.fit(X_train, y_train)
 
     # Evaluate
-    y_hat = tree.predict(X)
-    train_mse = mean_squared_error(y, y_hat)
+    y_hat = tree.predict(X_test)
+    test_rmse = root_mean_squared_error(y_test, y_hat)
+    train_rmse = root_mean_squared_error(y_train, tree.predict(X_train))
 
     # Plot
     plot_path = None
@@ -124,13 +128,14 @@ def regression_tree(
 
     print(
         f"Regression tree fitted. max_depth={max_depth}, "
-        f"min_samples_leaf={min_samples_leaf}, train MSE={train_mse:.4f}"
+        f"min_samples_leaf={min_samples_leaf}, test_rmse={test_rmse:.4f}, train_rmse={train_rmse:.4f}"
     )
 
     return {
         "model": tree,
         "feature_names": feature_names,
-        "train_mse": train_mse,
+        "test_rmse": test_rmse,
+        "train_rmse": train_rmse,
         "plot_path": plot_path,
     }
 
@@ -180,9 +185,12 @@ def classification_tree(
     # Select and prepare features
     feature_cols = select_features(data, feature_strategy)
     X_full, feature_names = prepare_features(data, feature_cols)
-
-    # Subsample for fitting
-    X_fit, y_fit = subsample_data(X_full, y_full, sample_for_fit, random_state)
+    
+    X_train,X_test,y_train,y_test = train_test_split(
+                                                X_full,y_full,
+                                                test_size=0.2,
+                                                random_state=42,
+                                                stratify=y_full)
 
     # Fit classifier
     clf = DTC(
@@ -192,44 +200,34 @@ def classification_tree(
         class_weight=class_weight,
         random_state=random_state,
     )
-    clf.fit(X_fit, y_fit)
+    clf.fit(X_train, y_train)
 
     # Evaluate
-    y_hat = clf.predict(X_fit)
-    y_proba = clf.predict_proba(X_fit)[:, 1]
-    train_accuracy = accuracy_score(y_fit, y_hat)
-    train_logloss = log_loss(y_fit, y_proba)
+    y_hat = clf.predict(X_test)
+    y_proba = clf.predict_proba(X_test)[:, 1]
+    test_accuracy = accuracy_score(y_test, y_hat)
+    test_logloss = log_loss(y_test, y_proba)
+    train_accuracy = accuracy_score(y_train, clf.predict(X_train))
+    train_logloss = log_loss(y_train, clf.predict_proba(X_train)[:,1])
 
     # Plot
     plot_path = None
     if save_plot:
-        # Use smaller tree for visualization if needed
-        if X_full.shape[0] > sample_for_plot:
-            X_plot, y_plot = subsample_data(X_full, y_full, sample_for_plot, random_state)
-            plot_clf = DTC(
-                criterion=criterion,
-                max_depth=max_depth,
-                min_samples_leaf=min_samples_leaf,
-                class_weight=class_weight,
-                random_state=random_state,
-            ).fit(X_plot, y_plot)
-        else:
-            plot_clf = clf
-
-        plot_path = save_tree_plot(
+      plot_clf = clf
+      plot_path = save_tree_plot(
             plot_clf,
             feature_names,
             "Classification Tree Predicting Voting (Yes/No)",
             "classification_tree.png",
             class_names=["No", "Yes"],
-            figsize=(24,16)
+            figsize=(30,16)
         )
 
     print(
         f"Classification tree fitted (strategy={feature_strategy}, "
-        f"n_features={len(feature_names)}, n_samples={X_fit.shape[0]}). "
+        f"n_features={len(feature_names)}, n_samples={X_train.shape[0]}). "
         f"max_depth={max_depth}, min_samples_leaf={min_samples_leaf}, "
-        f"accuracy={train_accuracy:.4f}, log-loss={train_logloss:.4f}"
+        f"accuracy={test_accuracy:.4f}, log-loss={test_logloss:.4f}"
     )
 
     return {
@@ -237,17 +235,19 @@ def classification_tree(
         "feature_names": feature_names,
         "train_accuracy": train_accuracy,
         "train_logloss": train_logloss,
+        "test_accuracy": test_accuracy,
+        "test_logloss": test_logloss,
         "plot_path": plot_path,
     }
 
 
 def random_forest_classifier(
-    n_estimators: int = 300,
+    n_estimators: int = 500,
     max_depth: Optional[int] = None,
-    min_samples_leaf: int = 200,
+    min_samples_leaf: int = 300,
     max_features: str = "sqrt",
     feature_strategy: Literal["minimal", "core", "all"] = "minimal",
-    sample_for_fit: Optional[int] = 120000,
+    sample_for_fit: Optional[int] = None,
     class_weight: Optional[str] = "balanced",
     random_state: int = 0,
     top_n: int = 20,
@@ -291,7 +291,11 @@ def random_forest_classifier(
     X_full, feature_names = prepare_features(data, feature_cols)
 
     # Subsample for fitting
-    X_fit, y_fit = subsample_data(X_full, y_full, sample_for_fit, random_state)
+    X_train,X_test,y_train,y_test = train_test_split(
+                                                X_full,y_full,
+                                                test_size=0.2,
+                                                random_state=42,
+                                                stratify=y_full)
 
     # Fit random forest
     rf = RandomForestClassifier(
@@ -304,7 +308,15 @@ def random_forest_classifier(
         oob_score=True,
         random_state=random_state,
     )
-    rf.fit(X_fit, y_fit)
+    rf.fit(X_train, y_train)
+
+    # Evaluate
+    y_hat = rf.predict(X_test)
+    y_proba = rf.predict_proba(X_test)[:, 1]
+    test_accuracy = accuracy_score(y_test, y_hat)
+    test_logloss = log_loss(y_test, y_proba)
+    train_accuracy = accuracy_score(y_train, rf.predict(X_train))
+    train_logloss = log_loss(y_train, rf.predict_proba(X_train)[:,1])
 
     # Feature importance
     imp_df = (
@@ -336,7 +348,7 @@ def random_forest_classifier(
 
     print(
         f"Random Forest fitted (strategy={feature_strategy}, "
-        f"n_features={len(feature_names)}, n_samples={X_fit.shape[0]}). "
+        f"n_features={len(feature_names)}, n_samples={X_train.shape[0]}). "
         f"OOB score={rf.oob_score_:.4f}"
     )
 
@@ -346,4 +358,8 @@ def random_forest_classifier(
         "importance_df": imp_df,
         "oob_score": rf.oob_score_,
         "plot_path": plot_path,
+        "train_accuracy": train_accuracy,
+        "train_logloss": train_logloss,
+        "test_accuracy": test_accuracy,
+        "test_logloss": test_logloss,
     }
