@@ -15,7 +15,7 @@ def gradient_boosting_classifier(
     max_depth: int = 3,
     min_samples_leaf: int = 200,
     subsample: float = 1.0,
-    feature_strategy: Literal["minimal", "core", "all"] = "minimal",
+    feature_strategy: Literal["minimal", "core", "all"] = "core",
     random_state: int = 42,
 ) -> dict:
     """

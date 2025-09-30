@@ -15,7 +15,7 @@ def bagging_classifier(
     max_features: float = 1.0,
     max_depth: Optional[int] = None,
     min_samples_leaf: int = 200,
-    feature_strategy: Literal["minimal", "core", "all"] = "minimal",
+    feature_strategy: Literal["minimal", "core", "all"] = "core",
     random_state: int = 42,
     class_weight: Optional[str] = "balanced",
 ) -> dict:
