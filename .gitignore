@@ -2,3 +2,14 @@
 .venv
 *.csv
 *.pyc
+*.xml
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.iml
+.idea
+*.bbl
+*.blg
