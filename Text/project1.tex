@@ -15,9 +15,10 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{natbib}
+\usepackage{threeparttable}
 
 
-\setstretch{1.1}
+\setstretch{1.2}
 
 \begin{document}
 % Title page
@@ -38,7 +39,7 @@
 
     \vspace{0.5cm}
     
-    \Large{\textbf{Project One}}
+    \Large{\textbf{DRAFT Project One}}
     
     \vfill
     
@@ -52,8 +53,181 @@
 \end{titlepage}
 
 \section{Introduction}
-One 
+The most important aspect of a democratic society is the ability of its citizens to vote and select their representatives in the government. However, voter turnout has been declining consistently across all developed countries (\cite{solijonov_voter_nodate}). In the 2024 US Presidential Election, the voter turnout was $63.9\%$ percent, which was $2.7\%$ percent lower than the previous election. Similar trends can be observed in Canada, the UK, and Europe.
 
+In order to ensure that representation across government levels is fair and stable, it is very important to understand what influences voter turnout. In their 2006 field experiment, Gerber, Green, and Larimer tackled this question and tried to isolate how voter turnout might be influenced by social pressures such as civic duty, peer pressure, etc. (\cite{gerber_social_2008}). Their research question studied the direct effects that the social pressure had on a voter turnout of a household. In this paper, we are going to use the data from their field experiment and isolate how information diffuses through a social network, especially concerning different types of social pressure. We want to study the diffusion effect of these different types of social pressures and how far they extend. 
+
+Understanding how social pressure shapes information diffusion reveals to us the dynamics that neither phenomenon produces alone. And these dynamics have now provided some key results across public health, election results, and the spread of both knowledge and misinformation across billions of people. Across disciplines, researchers have found that information simply just does not diffuse through a network like a disease. It creates new societal rules and reshapes the very networks through which it spreads. 
+
+\cite{hong_covid-19_2023} showed how positive social pressure from the public authority led to lower skepticism about the COVID-19 vaccine and increased vaccination rates. However, the study missed the effect of the information transfer among the citizens on the country and how that led to a positive outcome. \cite{bond_61-million-person_2012} found results similar to \cite{gerber_social_2008} where people who received social pressure treatments with familiar faces were 0.39\% more likely to vote than people who received a treatment with a stranger's face. \cite{bond_61-million-person_2012} also found that the social contagion/diffusion effect resulted in an additional 280,000 voters compared to the direct effects of approximately 60,000 voters. This is similar to the research question we are trying to anser in this study. However, we are trying to isolate the diffusion effects of different types of social pressure treatments.
+
+\cite{atienza-barthelemy_modeling_2025} created a model to study the diffusion of information through social media. They found that social media allows for rapid dissemination of information but the longevity and the reach of the content is severely limited due to the availability of an overwhelming amount of information on these platforms. Given our data is from a field experiment in 2006, we are unable to study similar metrics, however, this can easily be a future extension of this project.
+
+In a similar project, \cite{vosoughi_spread_2018} studied the spread of true and false news stories on Twitter. They found that false news had deeper and more rapid information diffusion effects. They also discovered that the diffusion effects of false news were human led and not influenced by bots. This is an interesting result and is the motivation behind our research question. We want to isolate which types of social pressure diffuse more effectively to combat misinformation as well as to allow for positive social pressure to be more effective. 
+
+\cite{haenschen_social_2016} studied the effect of pride and shame social pressure treatments on voter turnout and found a treatment effect of 15.8\% to 24.3\%. However, they did not find any signficant effect from indirect social pressure or diffusion. Their empirical strategy was to use a linear probability model with OLS estimation. We will be using a similar empirical strategy but we will extend the empirical work to include spatial autoregressive models and causal machine learning methods to better isolate the diffusion effects.
+
+The rest of the paper is structured as follows. Section 2 describes the original experiment and the data. Section 3 describes the theoretical framework and the empirical strategy. Section 4 presents the results and section 5 concludes. We do include a future extensions section after the conclusion to discuss how this project can be extended further.
+
+\section{Data and Summary Statistics}
+The data used in this project is from a field experiment conducted by \cite{gerber_social_2008} prior to the August 2006 primary elections in the state of Michigan, United States. The August 2006 primary election was a statewide election with offices across the political spectrum being contested. The data was collected from 180,002 households and every individual residing at the same address was considered to be a part of the household. Individuals with missing records, and individuals living in apartment complexes were not included. Individuals living on streets with fewer than 10 neighbours were also excluded from the experiment.
+
+Prior to the random assigment of the treatment, individuals who were more likely to vote by an absentee ballot were excluded to control for pre-treatment voting decisions.Individuals who had not voted in the extremely high turnout 2004 general election were considered to have moved, died or double registered and were also excluded from the study.
+
+The remaining 180,002 households were randomly assigned to one of the four treatment groups or the control group. The control group received no mailings. Each household in one of the treatment groups received one of the four mailings 11 days prior to the election. Each mailing included ``DO YOUR CIVIC DUTY - VOTE!" along with a varying degree of social pressure. The four treatment groups were as follows:
+
+The \textbf{Civic Duty} treatment was the least intrusive and included the message: ``Remember your rights and responsibilities as a citizen. Remember to vote." The \textbf{Hawthorne} treatment told households ``YOU ARE BEING STUDIED" and that their voting behaviour was being monitored for research purposes. The \textbf{Self} treatment included a message that informed the household that their voting record was public information and included their public record for the previous elections. Finally, the \textbf{Neighbors} treatment was the most intrusive and included a message that informed the household that their voting record was public information and included their public record for the previous elections. Additionally, it also included the voting records of their neighbours.
+Both the Self and the Neighbors treatments included the face that an updated voting record would be mailed to them after the election.
+
+The outcome variable of interest is whether an individual voted in the August 2006 primary election. The data also collected information from the previous elections in 2000, 2002 and 2004 that was supplemented from the Qualified Voter File. Finally, the data included demographic information such as age, gender and party affiliation couped with census data of the household's neighbourhood.
+
+\input{../Output/Tables/table1.tex}
+Since the variables are binary, the summary statistics do not offer much insight. However, we can see that the treatment groups are fairly evenly distributed with the control group being slightly larger. The average age of the individuals in the sample is 50 years old. Below is a bar chart showing the outcome variable (voted in 2006 election) based on previous voting history.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/figure1.png}   
+    \caption{Voter Turnout in 2006 Election by Previous Voting History}
+    \label{fig:figure1}
+\end{figure}
+
+As expected, individuals who voted in the previous elections were more likely to vote in the 2006 election. However, it is interesting to see that even after excluding everyone who did not vote in the 2004 general elections, there was a signficant portion of individuals who did not vote in the 2004 primary elections but voted in the 2006 primary elections. This shows that there are individuals who are not regular voters but can be mobilized to vote. 
+
+The data was downloaded from a Stanford GSB \href{https://github.com/gsbDBI/ExperimentData}{repository}. Given the field experiment's thorough design and randomization, we are confident that the data is of high quality and can be used for our analysis. The data was already cleaned and there are no major issues with missing data or outliers.
+\section{Regression Results \& Other Models}
+\subsection{OLS}
+To estimate the direct effects of the different social pressure treatments on voter turnout, we will explore all the widely used econometric methods in the literature. We will start with a simple OLS regression of the form:
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \epsilon_i
+\end{equation}
+Where $Y_i$ is a binary variable that takes the value of 1 if the individual voted in the 2006 primary election and 0 otherwise. $CivicDuty_i$, $Hawthorne_i$, $Self_i$ and $Neighbors_i$ are binary variables that take the value of 1 if the individual was assigned to that treatment group and 0 otherwise. The control group is the omitted category. $\epsilon_i$ is the error term.
+Control variables for age, gender, and previous voting history will be added to the regression to increase precision. We will also cluster the standard errors at the household level to account for any correlation in the error terms within households.
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_5 X_i + \epsilon_i
+\end{equation}
+Where $X_i$ is a vector of control variables. Results from the regression are presented in Table 2. 
+\begin{table}[H]
+    \input{../Output/Tables/regression_table.tex}
+    \caption{OLS Regression Results}        
+\end{table}
+The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by 8.02 percentage points. The Self treatment increases the probability of voting by 4.83 percentage points, the Hawthorne treatment by 2.57 percentage points and the Civic Duty treatment by 1.87 percentage points. There is also a very signficant positive effect of having voted in the 2004 primary election, increasing the probability of voting by 14.82 percentage points.
+
+\subsection{Identification Assumptions}
+The identification assumption for the OLS regression is that the treatment assignment is random and uncorrelated with the error term. Given the randomization in the original experiment, this assumption is likely to hold. The treatment covariate balance table is presented below:
+\input{../Output/Tables/treatment_covariate_balance.tex}
+
+This shows that the randomization was effective. However, there may be some concerns about spillover effects from the Neighbors treatment to the control group. 
+
+To estimate the these diffusion effects, consider the following plot showing the voter turnout in the control group against the neighbourhood treatment intensity:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/spillover_by_intensity.png}   
+    \caption{Voter Turnout in Control Group by Neighbourhood Treatment Intensity}
+    \label{fig:figure2}
+\end{figure}
+
+The clearly upward sloping trend shows that as the treatment intensity increases, the voter turnout in the control group also increases. This is a clear indication of positive information diffusion effects. To estimate the spillover effects more formally, we will run the following regression:
+\begin{equation}
+\begin{split}
+Y_i &= \beta_0 + \beta_1 \text{CivicDuty}_i + \beta_2 \text{Hawthorne}_i + \beta_3 \text{Self}_i \\
+    &\quad + \beta_4 \text{Neighbors}_i + \beta_5 \text{Intensity}_i + \beta_6 (\text{Neighbors}_i \times \text{Intensity}_i) + \beta_7 X_i + \epsilon_i
+\end{split}
+\end{equation}
+Where $Intensity_i$ is the treatment intensity in the neighbourhood of individual $i$. The interaction term $Neighbors_i \times Intensity_i$ captures the spillover effects of the Neighbors treatment. Results from the regression are presented in Table 3.
+\begin{table}[H]
+    \input{../Output/Tables/regression_interactions.tex}
+    \caption{OLS Regression Results with Interaction Term}        
+\end{table}
+The coefficient on the interaction term is negative but not statistically significant. This suggests that there are no significant spillover effects from the Neighbors treatment. However, we can improve our estimate further by utilizing causal machine learning methods.
+
+\subsection{Spatial Autoregressive Model}
+To account for potential spatial correlation in the error terms, we will use a spatial autorgressive model (SAR) (\cite{lord_chapter_2021}). The SAR model can be specified as:
+\begin{equation}
+    Y = \rho W Y + X\beta + \epsilon
+\end{equation}
+Where $Y$ is the vector of the outcome variable (voted in 2006), $W$ is the spatial weights matrix that captures the neighbourhood structure, $\rho$ is the spatial autoregressive coefficient, $X$ is the matrix of control variables and $\epsilon$ is the error term. The spatial weights matrix $W$ is constructed based on the geographical proximity of the households.
+
+Results from the SAR model are presented below:
+
+\begin{centering}
+    \input{../Output/Tables/sar_results.tex}
+\end{centering}
+
+This table shows that the spatial autoregressive coefficient $\rho$ is positive and statistically significant, indicating that there is positive spatial correlation in voter turnout. The treatment effects are still positive but only statistically signficant for the Neighbors and Self treatments. The magnitude of the treatment effects is also smaller compared to the OLS estimates. This suggests that some of the treatment effects estimated in the OLS regression may be due to spatial correlation in the error terms.
+
+\subsection{Regularization}
+To further support our findings and to regularize our estimates, we will use LASSO and Ridge regressions. We will use include the same variables as in the OLS regression:
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_7 X_i + \epsilon_i
+\end{equation}
+Where $X_i$ is a vector of control variables. Results from the LASSO and Ridge regressions are presented in Table 4.
+
+Both LASSO and Ridge regression arrived at the same coefficient estimates for the 4 treatment variables. The coefficients are considerably smaller than the OLS estimates, however the relative ordering of the treatment effects is consistent. The LASSO and Ridge regression coefficient paths are plotted below:
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../Output/Plots/lasso_coefficients.png}
+        \vspace{0.3em}
+        {\small LASSO coefficient path}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../Output/Plots/ridge_coefficients.png}
+        \vspace{0.3em}
+        {\small Ridge coefficient path}
+    \end{minipage}
+    \caption{Regularization coefficient paths: LASSO (left) and Ridge (right)}
+    \label{fig:coef_paths}
+\end{figure}
+
+Both the LASSO and Ridge regression coefficient paths show similar patterns with the intensity variables. Ridge showed negative effects for both intensity and high cluster intensity whereas LASSO showed a negative effect for intensity but a positive effect for high cluster intensity. This might be due to the L2 penalty spreading the penalty across all variables unlike the L1 penalty which drives some coefficients to zero.
+
+\subsection{Machine Learning Methods}
+To further explore the treatment effects and the potential spillover effects, we will use causal machine learning methods such as Regression Trees, Random Forests, Bagging and Boosting. The results from the random tree are presented below:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/diffusion_classification_tree.png}   
+    \caption{Regression Tree}
+    \label{fig:regression_tree}
+\end{figure}
+The regression tree shows that the age, previous voting history and the Neighbors treatment are the most important variables in prediction. The regression tree also does not show that cluster intensity is an important variable to be a leading predictor for the outcome variable.
+
+However, the random forest results show that the cluster intensity is an important variable. The variable importance plot is presented below:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/random_forest_feature_importance.png}   
+    \caption{Random Forest Variable Importance Plot}
+    \label{fig:random_forest}
+\end{figure}
+The random forest importance matrix supports the findings from the regression tree. Age and previous voting history are important predictors, however, neighbourhood demographics and cluster treatment intensity are also important predictors.
+
+Results from the different machine learning models are presented below:
+\input{../Output/Tables/diffusion_ml_model_comparison.tex}
+
+It is clear from the results that the Random Forest model performs the best across all metrics. However, boosting provides results that are very close to the Random Forest model. The Random Forest model benefits from the restriction of the predictors to a random subset which highlights that there are strong predictors in the dataset such as age, previous voting history, neighbourhood demographics and cluster treatment intensity.
+
+\subsection{Directed Acyclic Graphs}
+Here's a DAG to illustrate the relationships between the variables in our study:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{../Output/Plots/dag_plot_3.png}
+    \caption{Directed Acyclic Graph (DAG)}
+    \label{fig:dag}
+\end{figure}
+In this DAG, the treatment groups (Civic Duty, Hawthorne, Self, Neighbors) directly influence the outcome variable (Voted in 2006). The control variables as well geographic proximity. (clustering) affects the information sharing node which affects the outcome variable for the control group. Simpler DAGs can be found in the appanedix.
+
+\section{Conclusion}
+The results from our statistical analysis clearly show that social pressure treatments have a positive and significant effect on voter turnout. They also show that the control group is influenced by the treatment intensity in their neighbourhood, suggesting that information diffusion effects are present. However, the spillover effects from the Neighbors treatment are not statistically significant in the OLS regression. However, causal machine learning methods suggest that neighbourhood demographics and cluster treatment intensity are important predictors of voter turnout.
+
+This result has important implications for policymakers and businesses. Policymakers can use social pressure treatments to increase voter turnouts and positive diffusion effects allow for more effective mobilization. Businesses can use social pressure treatments along similar lines to increase product adoption and positive word of mouth. 
+
+Spatial clustering in the SAR model also suggest that neighborhood effects matter economically. Business locations and community investments are, thus, spatially dependent decisions that can benefit from understanding the dynamics of information diffusion. There are also business implications to the real estate sector, more civically engaged neighborhoods can lead to more prosperity and economically vibrant communities.
+
+\section{Future Steps}
+The next steps are to enhance the robustness of the spatial results with additional tests and to explore the causal machine learning methods that can isolate the spatial diffusion effects more effectively. Once the results are more robust, we can offer more concrete recommendations to policymakers and businesses on how to effectively leverage social pressure and information diffusion to achieve their goals.
+
+Additional extensions can include exploring social media data (such as. X (formerly Twitter)) to see how information diffusion effects spread in the modern age where spatial proximity is less relevant.
 \bibliography{references}
 \bibliographystyle{chicago}
 \end{document}

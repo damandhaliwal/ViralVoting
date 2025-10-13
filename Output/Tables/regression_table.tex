@@ -1,38 +1,35 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}        &      voted       & \textbf{  R-squared:         } &      0.054   \\
-\textbf{Model:}                &       OLS        & \textbf{  Adj. R-squared:    } &      0.054   \\
-\textbf{Method:}               &  Least Squares   & \textbf{  F-statistic:       } &      2245.   \\
-\textbf{Date:}                 & Tue, 30 Sep 2025 & \textbf{  Prob (F-statistic):} &      0.00    \\
-\textbf{Time:}                 &     13:01:09     & \textbf{  Log-Likelihood:    } & -2.1513e+05  \\
-\textbf{No. Observations:}     &      344084      & \textbf{  AIC:               } &  4.303e+05   \\
-\textbf{Df Residuals:}         &      344073      & \textbf{  BIC:               } &  4.304e+05   \\
-\textbf{Df Model:}             &          10      & \textbf{                     } &              \\
+\textbf{Dep. Variable:}        &      voted       & \textbf{  R-squared:         } &      0.045   \\
+\textbf{Model:}                &       OLS        & \textbf{  Adj. R-squared:    } &      0.045   \\
+\textbf{Method:}               &  Least Squares   & \textbf{  F-statistic:       } &      2469.   \\
+\textbf{Date:}                 & Sun, 12 Oct 2025 & \textbf{  Prob (F-statistic):} &      0.00    \\
+\textbf{Time:}                 &     19:23:54     & \textbf{  Log-Likelihood:    } & -2.1674e+05  \\
+\textbf{No. Observations:}     &      344084      & \textbf{  AIC:               } &  4.335e+05   \\
+\textbf{Df Residuals:}         &      344076      & \textbf{  BIC:               } &  4.336e+05   \\
+\textbf{Df Model:}             &           7      & \textbf{                     } &              \\
 \textbf{Covariance Type:}      &       HC1        & \textbf{                     } &              \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
                                & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{treatment\_civic duty} &       0.0181  &        0.003     &     7.176  &         0.000        &        0.013    &        0.023     \\
-\textbf{treatment\_hawthorne}  &       0.0254  &        0.003     &    10.011  &         0.000        &        0.020    &        0.030     \\
-\textbf{treatment\_neighbors}  &       0.0815  &        0.003     &    31.102  &         0.000        &        0.076    &        0.087     \\
-\textbf{treatment\_self}       &       0.0482  &        0.003     &    18.701  &         0.000        &        0.043    &        0.053     \\
-\textbf{sex}                   &      -0.0059  &        0.002     &    -3.817  &         0.000        &       -0.009    &       -0.003     \\
-\textbf{yob}                   &      -0.0026  &     5.97e-05     &   -43.618  &         0.000        &       -0.003    &       -0.002     \\
-\textbf{g2000}                 &      -0.0238  &        0.002     &   -10.203  &         0.000        &       -0.028    &       -0.019     \\
-\textbf{g2002}                 &       0.0979  &        0.002     &    47.363  &         0.000        &        0.094    &        0.102     \\
-\textbf{g2004}                 &       5.2626  &        0.118     &    44.654  &         0.000        &        5.032    &        5.494     \\
-\textbf{p2000}                 &       0.0959  &        0.002     &    50.105  &         0.000        &        0.092    &        0.100     \\
-\textbf{p2002}                 &       0.1149  &        0.002     &    67.454  &         0.000        &        0.112    &        0.118     \\
+\textbf{const}                 &       7.9765  &        0.102     &    78.491  &         0.000        &        7.777    &        8.176     \\
+\textbf{Civic Duty}            &       0.0187  &        0.003     &     7.338  &         0.000        &        0.014    &        0.024     \\
+\textbf{Hawthorne}             &       0.0257  &        0.003     &    10.074  &         0.000        &        0.021    &        0.031     \\
+\textbf{Neighbors}             &       0.0802  &        0.003     &    30.532  &         0.000        &        0.075    &        0.085     \\
+\textbf{Self}                  &       0.0483  &        0.003     &    18.678  &         0.000        &        0.043    &        0.053     \\
+\textbf{Sex}                   &      -0.0080  &        0.002     &    -5.157  &         0.000        &       -0.011    &       -0.005     \\
+\textbf{Year of Birth}         &      -0.0040  &     5.19e-05     &   -76.244  &         0.000        &       -0.004    &       -0.004     \\
+\textbf{2004 Primary Election} &       0.1482  &        0.002     &    91.050  &         0.000        &        0.145    &        0.151     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 497112.529 & \textbf{  Durbin-Watson:     } &     1.906  \\
-\textbf{Prob(Omnibus):} &    0.000   & \textbf{  Jarque-Bera (JB):  } & 51799.012  \\
-\textbf{Skew:}          &    0.720   & \textbf{  Prob(JB):          } &      0.00  \\
-\textbf{Kurtosis:}      &    1.759   & \textbf{  Cond. No.          } &  2.94e+05  \\
+\textbf{Omnibus:}       & 590582.423 & \textbf{  Durbin-Watson:     } &     1.896  \\
+\textbf{Prob(Omnibus):} &    0.000   & \textbf{  Jarque-Bera (JB):  } & 53396.840  \\
+\textbf{Skew:}          &    0.733   & \textbf{  Prob(JB):          } &      0.00  \\
+\textbf{Kurtosis:}      &    1.745   & \textbf{  Cond. No.          } &  2.65e+05  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
@@ -40,5 +37,5 @@
 
 Notes: \newline
  [1] Standard Errors are heteroscedasticity robust (HC1) \newline
- [2] The condition number is large, 2.94e+05. This might indicate that there are \newline
+ [2] The condition number is large, 2.65e+05. This might indicate that there are \newline
  strong multicollinearity or other numerical problems.

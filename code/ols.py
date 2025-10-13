@@ -23,10 +23,23 @@ def run_ols_analysis():
                       'treatment_neighbors', 'treatment_self']
 
     # Define control variables
-    control_vars = ['sex', 'yob', 'g2000', 'g2002', 'g2004', 'p2000', 'p2002']
+    control_vars = ['sex', 'yob', 'p2004']
 
     # Create feature matrix with treatment and control variables
     X = data[treatment_vars + control_vars]
+
+    # Rename columns to be cleaner
+    X = X.rename(columns={
+        'yob': 'Year of Birth',
+        'sex': 'Sex',
+        'voted': 'Voted',
+        'treatment_control': 'Control',
+        'treatment_self': 'Self',
+        'treatment_civic duty': 'Civic Duty',
+        'treatment_neighbors': 'Neighbors',
+        'treatment_hawthorne': 'Hawthorne',
+        'p2004': '2004 Primary Election'
+    })
 
     # Add constant for intercept
     X = sm.add_constant(X)

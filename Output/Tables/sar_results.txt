@@ -1,0 +1,67 @@
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: SPATIAL TWO STAGE LEAST SQUARES
+--------------------------------------------------
+Data set            :     unknown
+Weights matrix      :     unknown
+Dependent Variable  :       voted                Number of Observations:      344084
+Mean dependent var  :      0.3159                Number of Variables   :          18
+S.D. dependent var  :      0.4649                Degrees of Freedom    :      344066
+Pseudo R-squared    :      0.0641
+Spatial Pseudo R-squared:  0.0556
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT         4.65001         0.12024        38.67401         0.00000
+                 sex        -0.00605         0.00154        -3.94388         0.00008
+                 yob        -0.00244         0.00006       -41.21732         0.00000
+               g2000        -0.02124         0.00241        -8.79720         0.00000
+               g2002         0.09828         0.00223        44.10627         0.00000
+               p2000         0.09401         0.00182        51.59632         0.00000
+               p2002         0.11413         0.00163        69.99456         0.00000
+treatment_civic duty         0.01819         0.00252         7.21732         0.00000
+ treatment_hawthorne         0.02560         0.00252        10.15610         0.00000
+ treatment_neighbors         0.08155         0.00252        32.35316         0.00000
+      treatment_self         0.04837         0.00252        19.19302         0.00000
+          median_age         0.00221         0.00020        11.14391         0.00000
+       median_income        -0.00000         0.00000        -0.34013         0.73376
+       percent_white         0.00051         0.00023         2.16324         0.03052
+       percent_black         0.00239         0.00028         8.61344         0.00000
+          hsorhigher         0.00136         0.00034         3.99875         0.00006
+       bach_orhigher        -0.00060         0.00012        -5.11190         0.00000
+             W_voted         0.16884         0.01569        10.75805         0.00000
+------------------------------------------------------------------------------------
+Instrumented: W_voted
+Instruments: W_bach_orhigher, W_g2000, W_g2002, W_hsorhigher, W_median_age,
+             W_median_income, W_p2000, W_p2002, W_percent_black,
+             W_percent_white, W_sex, W_treatment_civic duty,
+             W_treatment_hawthorne, W_treatment_neighbors, W_treatment_self,
+             W_yob
+Warning: Variable(s) ['g2004'] removed for being constant.
+
+DIAGNOSTICS FOR SPATIAL DEPENDENCE
+TEST                              DF         VALUE           PROB
+Anselin-Kelejian Test             1        123.659           0.0000
+
+SPATIAL LAG MODEL IMPACTS
+Impacts computed using the 'simple' method.
+            Variable         Direct        Indirect          Total
+                 sex        -0.0061         -0.0012         -0.0073
+                 yob        -0.0024         -0.0005         -0.0029
+               g2000        -0.0212         -0.0043         -0.0256
+               g2002         0.0983          0.0200          0.1182
+               p2000         0.0940          0.0191          0.1131
+               p2002         0.1141          0.0232          0.1373
+treatment_civic duty         0.0182          0.0037          0.0219
+ treatment_hawthorne         0.0256          0.0052          0.0308
+ treatment_neighbors         0.0815          0.0166          0.0981
+      treatment_self         0.0484          0.0098          0.0582
+          median_age         0.0022          0.0004          0.0027
+       median_income        -0.0000         -0.0000         -0.0000
+       percent_white         0.0005          0.0001          0.0006
+       percent_black         0.0024          0.0005          0.0029
+          hsorhigher         0.0014          0.0003          0.0016
+       bach_orhigher        -0.0006         -0.0001         -0.0007
+================================ END OF REPORT =====================================

@@ -18,6 +18,7 @@ def clean_data():
 
     # Convert voted from yes/no to 1/0
     data['voted'] = data['voted'].map({'yes': 1, 'no': 0})
+    data['p2004'] = data['p2004'].map({'yes': 1, 'no': 0})
 
     # Convert treatment variables to categorical dummies
     treatment_dummies = pd.get_dummies(data['treatment'], prefix='treatment')

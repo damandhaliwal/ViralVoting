@@ -1,0 +1,46 @@
+\begin{center}
+\begin{tabular}{lclc}
+\toprule
+\textbf{Dep. Variable:}         &      voted       & \textbf{  R-squared:         } &      0.080   \\
+\textbf{Model:}                 &       OLS        & \textbf{  Adj. R-squared:    } &      0.080   \\
+\textbf{Method:}                &  Least Squares   & \textbf{  F-statistic:       } &      2016.   \\
+\textbf{Date:}                  & Sun, 12 Oct 2025 & \textbf{  Prob (F-statistic):} &      0.00    \\
+\textbf{Time:}                  &     23:33:22     & \textbf{  Log-Likelihood:    } & -2.1036e+05  \\
+\textbf{No. Observations:}      &      344084      & \textbf{  AIC:               } &  4.207e+05   \\
+\textbf{Df Residuals:}          &      344071      & \textbf{  BIC:               } &  4.209e+05   \\
+\textbf{Df Model:}              &          12      & \textbf{                     } &              \\
+\textbf{Covariance Type:}       &     cluster      & \textbf{                     } &              \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lcccccc}
+                                & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{Intercept}              &       4.8951  &        0.150     &    32.612  &         0.000        &        4.601    &        5.189     \\
+\textbf{treatment\_neighbors}   &       0.0810  &        0.003     &    25.584  &         0.000        &        0.075    &        0.087     \\
+\textbf{treatment\_self}        &       0.0483  &        0.003     &    15.704  &         0.000        &        0.042    &        0.054     \\
+\textbf{treatment\_hawthorne}   &       0.0253  &        0.003     &     8.448  &         0.000        &        0.019    &        0.031     \\
+\textbf{treatment\_civic\_duty} &       0.0187  &        0.003     &     6.259  &         0.000        &        0.013    &        0.025     \\
+\textbf{treatment\_intensity}   &      -0.0566  &        0.034     &    -1.686  &         0.092        &       -0.122    &        0.009     \\
+\textbf{yob}                    &      -0.0024  &     7.56e-05     &   -32.141  &         0.000        &       -0.003    &       -0.002     \\
+\textbf{sex}                    &      -0.0056  &        0.001     &    -4.967  &         0.000        &       -0.008    &       -0.003     \\
+\textbf{g2000}                  &      -0.0277  &        0.003     &   -10.303  &         0.000        &       -0.033    &       -0.022     \\
+\textbf{g2002}                  &       0.0848  &        0.002     &    36.379  &         0.000        &        0.080    &        0.089     \\
+\textbf{p2000}                  &       0.0928  &        0.002     &    39.031  &         0.000        &        0.088    &        0.097     \\
+\textbf{p2002}                  &       0.1292  &        0.002     &    63.628  &         0.000        &        0.125    &        0.133     \\
+\textbf{p2004}                  &       0.1536  &        0.002     &    70.423  &         0.000        &        0.149    &        0.158     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 274740.647 & \textbf{  Durbin-Watson:     } &     1.901  \\
+\textbf{Prob(Omnibus):} &    0.000   & \textbf{  Jarque-Bera (JB):  } & 47171.250  \\
+\textbf{Skew:}          &    0.690   & \textbf{  Prob(JB):          } &      0.00  \\
+\textbf{Kurtosis:}      &    1.822   & \textbf{  Cond. No.          } &  2.95e+05  \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
+\end{center}
+
+Notes: \newline
+ [1] Standard Errors are robust to cluster correlation (cluster) \newline
+ [2] The condition number is large, 2.95e+05. This might indicate that there are \newline
+ strong multicollinearity or other numerical problems.

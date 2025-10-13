@@ -23,7 +23,25 @@ def run_ridge_analysis():
     treatment_vars = ['treatment_civic duty', 'treatment_hawthorne',
                       'treatment_neighbors', 'treatment_self']
     control_vars = ['sex', 'yob', 'g2000', 'g2002', 'g2004', 'p2000', 'p2002']
-    feature_names = treatment_vars + control_vars
+    
+    # Calculate cluster-level treatment intensity
+    cluster_stats = data.groupby('cluster').agg({
+        'treatment_control': 'mean'  # Proportion of control in each cluster
+    }).reset_index()
+    cluster_stats.columns = ['cluster', 'pct_control']
+    
+    # Merge back to main data
+    data = data.merge(cluster_stats, on='cluster', how='left')
+    
+    # Create intensity variables
+    data['treatment_intensity'] = 1 - data['pct_control']  # Higher = more treated neighbors
+    
+    # Create binary indicator for high-intensity clusters (above median)
+    median_intensity = data['treatment_intensity'].median()
+    data['high_cluster_intensity'] = (data['treatment_intensity'] > median_intensity).astype(int)
+    
+    intensity_vars = ['treatment_intensity', 'high_cluster_intensity']
+    feature_names = treatment_vars + control_vars + intensity_vars
     
     # Create feature matrix and outcome
     X = np.array(data[feature_names])
@@ -174,6 +192,14 @@ def print_results_summary(results):
         effect = results['marginal_effects'][i] * 100
         print(f"  {name.replace('treatment_', '').title()}: {effect:+.2f} pp")
     
+    print(f"\nIntensity Variables:")
+    intensity_start_idx = len(results['feature_names']) - 2
+    for i in range(intensity_start_idx, len(results['feature_names'])):
+        name = results['feature_names'][i]
+        coef = results['coefficients'][i]
+        effect = results['marginal_effects'][i] * 100
+        print(f"  {name.replace('_', ' ').title()}: {effect:+.2f} pp (coef: {coef:+.4f})")
+    
     print("="*60 + "\n")
 
 
@@ -296,7 +322,7 @@ def create_coefficient_and_error_plots(results, paths):
         ax2.set_ylim([y_center - 0.005, y_center + 0.005])
     
     plt.tight_layout()
-    plt.savefig(paths['plots'] + 'ridge_cv_error.png', dpi=300, bbox_inches='tight')
+    plt.savefig(paths['plots'] + 'ridge_cv_error.png', dpi=1200, bbox_inches='tight')
     plt.close()
     
     print(f"\nPlots saved:")

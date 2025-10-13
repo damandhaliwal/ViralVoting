@@ -1,0 +1,30 @@
+\begin{table}[H]
+\caption{Spatial Autoregressive Model Results}
+\label{tab:sar_results}
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+Variable & Coefficient & Std. Error & Z-statistic & p-value \\
+\midrule
+Spatial Lag (rho) & 0.0830*** & nan & 7.740 & 0.0000 \\
+Civic Duty & 5.2685 & 0.6807 & 1.481 & 0.1387 \\
+Hawthorne & 0.0218 & 0.0147 & 1.445 & 0.1485 \\
+Self & 0.0212*** & 0.0147 & 4.439 & 0.0000 \\
+Neighbors & 0.0635*** & 0.0143 & 4.387 & 0.0000 \\
+Female & 0.0651 & 0.0148 & 0.334 & 0.7380 \\
+Year of Birth & 0.0030*** & 0.0089 & -7.702 & 0.0000 \\
+Voted General 2000 & -0.0026 & 0.0003 & -1.764 & 0.0777 \\
+Voted General 2002 & -0.0245*** & 0.0139 & 5.345 & 0.0000 \\
+Voted Primary 2000 & 0.0700*** & 0.0131 & 9.367 & 0.0000 \\
+Voted Primary 2002 & 0.0983*** & 0.0105 & 14.394 & 0.0000 \\
+Voted Primary 2004 & 0.1361*** & 0.0095 & 16.069 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Notes: *** p$<$0.001, ** p$<$0.01, * p$<$0.05.
+\item Spatial lag coefficient (rho) measures spatial dependence in voting behavior.
+\item Model estimated using generalized method of moments with 8-nearest neighbors spatial weights.
+\end{tablenotes}
+\end{center}
+\end{table}

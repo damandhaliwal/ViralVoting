@@ -19,11 +19,34 @@ def run_lasso_analysis():
     data = clean_data()
     paths = get_project_paths()
     
+    # Build cluster intensity measures mirroring diffusion_ml.py
+    if {"cluster", "treatment_control"}.issubset(data.columns):
+        cluster_stats = (
+            data.groupby("cluster")["treatment_control"]
+            .agg(["mean", "count"])
+            .rename(columns={"mean": "pct_control", "count": "cluster_size"})
+            .reset_index()
+        )
+        cluster_stats["treatment_intensity"] = 1.0 - cluster_stats["pct_control"]
+        median_intensity = cluster_stats["treatment_intensity"].median()
+        data = data.merge(
+            cluster_stats[["cluster", "treatment_intensity", "cluster_size"]],
+            on="cluster",
+            how="left",
+        )
+        data["high_cluster_intensity"] = (
+            data["treatment_intensity"] >= median_intensity
+        ).astype(int)
+    else:
+        data["treatment_intensity"] = 0.0
+        data["high_cluster_intensity"] = 0
+    
     # Define variables
     treatment_vars = ['treatment_civic duty', 'treatment_hawthorne',
                       'treatment_neighbors', 'treatment_self']
-    control_vars = ['sex', 'yob', 'g2000', 'g2002', 'g2004', 'p2000', 'p2002']
-    feature_names = treatment_vars + control_vars
+    control_vars = ['sex', 'yob', 'g2000', 'g2002', 'p2004', 'p2000', 'p2002']
+    intensity_vars = ['treatment_intensity', 'high_cluster_intensity']
+    feature_names = treatment_vars + control_vars + intensity_vars
     
     # Create feature matrix and outcome
     X = np.array(data[feature_names])
@@ -189,6 +212,17 @@ def print_results_summary(results):
         else:
             print(f"  {name.replace('treatment_', '').title()}: 0.00 pp (not selected)")
     
+    print(f"\nIntensity Variables:")
+    intensity_start = len(results['feature_names']) - 2  # Last 2 variables
+    for i in range(intensity_start, len(results['feature_names'])):
+        name = results['feature_names'][i]
+        coef = results['coefficients'][i]
+        effect = results['marginal_effects'][i] * 100
+        if coef != 0:
+            print(f"  {name.replace('_', ' ').title()}: {effect:+.2f} pp (coef: {coef:+.4f})")
+        else:
+            print(f"  {name.replace('_', ' ').title()}: 0.00 pp (not selected)")
+    
     print("="*60 + "\n")
 
 
@@ -311,7 +345,7 @@ def create_coefficient_and_error_plots(results, paths):
         ax2.set_ylim([y_center - 0.005, y_center + 0.005])
     
     plt.tight_layout()
-    plt.savefig(paths['plots'] + 'lasso_cv_error.png', dpi=300, bbox_inches='tight')
+    plt.savefig(paths['plots'] + 'lasso_cv_error.png', dpi=1200, bbox_inches='tight')
     plt.close()
     
     print(f"\nPlots saved:")

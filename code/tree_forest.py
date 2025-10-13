@@ -56,7 +56,7 @@ def save_tree_plot(
     
     plot_path = paths["plots"] + filename
     plt.tight_layout()
-    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+    plt.savefig(plot_path, dpi=1200, bbox_inches="tight")
     plt.close(fig)
     
     print(f"Saved plot to: {plot_path}")
@@ -341,7 +341,7 @@ def random_forest_classifier(
         
         plot_path = paths["plots"] + "random_forest_importance.png"
         plt.tight_layout()
-        plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+        plt.savefig(plot_path, dpi=1200, bbox_inches="tight")
         plt.close(fig)
         
         print(f"Saved importance plot to: {plot_path}")
