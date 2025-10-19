@@ -135,3 +135,27 @@ def subsample_data(
     rng = np.random.default_rng(random_state)
     idx = rng.choice(X.shape[0], size=sample_size, replace=False)
     return X[idx], y[idx]
+
+def get_clean_variable_names():
+    return {
+        'const': 'Constant',
+        'voted': 'Voted',
+        'treatment\_civic duty': 'Civic Duty',
+        'treatment\_hawthorne': 'Hawthorne',
+        'treatment\_neighbors': 'Neighbors',
+        'treatment\_self': 'Self',
+        'treatment\_control': 'Control',
+        'sex': 'Female',
+        'yob': 'Year of Birth',
+        'g2000': 'Voted General 2000',
+        'g2002': 'Voted General 2002',
+        'g2004': 'Voted General 2004',
+        'p2000': 'Voted Primary 2000',
+        'p2002': 'Voted Primary 2002',
+        'p2004': 'Voted Primary 2004',
+        'treatment_intensity': 'Treatment Intensity',
+        'high_block_intensity': 'High Intensity Block',
+        'cluster_size': 'Cluster Size',
+        'hh_size': 'Household Size',
+        'treatment\_intensity': 'Treatment Intensity'
+    }
