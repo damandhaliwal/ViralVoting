@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[11pt, draft]{article}
  
 \usepackage[margin=1in]{geometry} 
 \usepackage{amsmath,amsthm,amssymb,bm}
@@ -16,6 +16,7 @@
 \usepackage{float}
 \usepackage{natbib}
 \usepackage{threeparttable}
+\usepackage{enumitem}
 
 
 \setstretch{1.2}
@@ -93,6 +94,66 @@ Since the variables are binary, the summary statistics do not offer much insight
 As expected, individuals who voted in the previous elections were more likely to vote in the 2006 election. However, it is interesting to see that even after excluding everyone who did not vote in the 2004 general elections, there was a signficant portion of individuals who did not vote in the 2004 primary elections but voted in the 2006 primary elections. This shows that there are individuals who are not regular voters but can be mobilized to vote. 
 
 The data was downloaded from a Stanford GSB \href{https://github.com/gsbDBI/ExperimentData}{repository}. Given the field experiment's thorough design and randomization, we are confident that the data is of high quality and can be used for our analysis. The data was already cleaned and there are no major issues with missing data or outliers.
+
+
+\pagebreak
+
+\section{Theoretical Model \& Empirical Framework}
+To model the information diffusion effects of social pressure on voting, we will borrow a network diffusion model from \cite{myers_information_2012}. The original model is designed to capture the spread of information through a social network. In our case, we will adapt the model to capture it based on geographical proximity. Effects are bound to be different since social media connections allow for rapid and far reaching dissemination of information.
+
+\subsection{Model Description}
+The original model by \cite{myers_information_2012} has three main components: the contagion, internal exposure and external exposure. With respect to the reserach question at hand, we define these components as follows:
+
+We define \textbf{contagion} as the information about social pressure and the public disclosure of voting behaviour. A household becomes 'infected' when they become aware that (1) voting behavior is being monitored, (2) their voting records may be publicized to neighbors, and (3) voting is subject to social surveillance. This information can spread through both the experimental mailings and through social diffusion within neighborhoods.
+
+An \textbf{internal exposure} occurs when a household learns about the social pressure treatments from their neighbors who received the mailings. This includes both direct social interactions (neighbors discussing the mailings) and indirect observations (seeing neighbors vote, observing physical mailings, or experiencing increased social pressure within the neighborhood). Internal exposures capture all information transmission along the edges of our observed network structure.
+
+\textbf{External exposures} represent the instances when information reaches a household from sources outside their immediate neighbor network. This includes the experimental mailings themselves (the primary observed external exposure), as well as unobserved sources such as local media coverage, family members living elsewhere, workplace discussions, and general get-out-the-vote campaigns occurring simultaneously. External exposures represent information 'jumping into' the network from outside.
+
+\subsection{Model}
+The original model in \cite{myers_information_2012} models the probability of infection at time t as:
+
+\begin{equation*}
+    F^{(i)}(t) = \sum_{n=1}^{\infty} P[i \text{ has } n \text{ exp. }] \times P[i \text{ inf. } | i \text{ has } n \text{ exp. }]
+\end{equation*}
+\begin{equation*}
+    = \sum_{n=1}^{\infty} P_{\exp}^{(i)}(n; t) \times \left[ 1 - \prod_{k=1}^{n} [1 - \eta(k)] \right].
+\end{equation*}
+
+Where $P_{\exp}^{(i)}(n; t)$ is the probability that node $i$ has received $n$ exposures by time $t$ and $\eta(k)$ is the probability of infection upon the $k^{th}$ exposure.
+
+Similarly, we model the probability that a household votes as a function of both internal and external exposures. However, \cite{myers_information_2012} developed a dynamic model that tracks how probability evolves over time as repeated exposures occur. This requires temporal data on when households decided to vote, which we do not have. Therefore, we borrow their framework and apply two simplifying approaches that captures the same mechanism in a static setting.
+
+\subsubsection{Linear Model}
+In order to simplify the model, we integrate over time and apply a linear approximation to get the following static model:
+\begin{equation*}
+    P(\text{vote}_i = 1) = \beta_0 + \beta_1 \cdot \text{treatment}_i + \beta_2 \cdot \text{neighbors\_treated}_i + \gamma X_i + \alpha_{\text{block}} + \varepsilon_i
+\end{equation*}
+where:
+\begin{itemize}[noitemsep]
+    \item $\text{treatment}_i$ is a binary indicator for whether household $i$ received a mailing (captures external exposure)
+    \item $\text{neighbors\_treated}_i$ is the count of $i$'s neighbors who received mailings (captures internal exposure)
+    \item $X_i$ is a vector of individual characteristics (age, sex, past voting history)
+    \item $\alpha_{\text{block}}$ are block fixed effects (control for neighborhood-level confounders)
+    \item $\varepsilon_i$ is the error term (clustered at household level, the unit of randomization)
+\end{itemize}
+
+
+The key parameters of interest are $\beta_1$ and $\beta_2$. $\beta_1$ captures the direct effect of receiving a social pressure mailing on the probability of voting (the external exposure), while $\beta_2$ captures the diffusion effect from having more neighbors treated (the internal exposure). A positive and significant $\beta_2$ would indicate that information about social pressure diffuses through neighborhood interactions, increasing voter turnout even among untreated households.
+
+\subsubsection{Graphical Neural Network Model}
+To capure potential non-linearities and complex interactions in the diffusion process, we will employ Graphical Neural Networks (GNNs) (\cite{kipf_semi-supervised_2017}). GNNs are well-suited to replicate the network structure of neighborhoods that \cite{myers_information_2012} originally modeled. In this approach, each household is represented as a node in a graph, with edges connecting neighboring households. The GNN will learn to predict the probability of voting based on both individual features and the features of neighboring nodes.
+
+GNNs can also capture higher-order interactions that may be present in the diffusion of social pressure information. For example, the influence of a neighbor who has a treated neighbor. \cite{myers_information_2012} also has a non-linear exposure curve that can be better captured with a non-linear model like the GNN.
+
+GNNs stack non-linear convolutional layers of the form:
+\begin{equation*}
+    H^{(l+1)} = \sigma(\tilde{D}^{-\frac{1}{2}}\tilde{A}\tilde{D}^{-\frac{1}{2}}H^{(l)}W^{(l)})
+\end{equation*}
+where $\tilde{A} = A + I$ is the adjacency matrix of an undirected graph with added self-connections. $I_N$ is the identity matrix, $\tilde{D}_{ii} = \sum_j \tilde{A}_{ij}$ and $W^{(l)}$ is a layer-specific trainable weight matrix. $\sigma(\cdot)$ is an activation function with the most popular choice being ReLU ($f(x) = \max(0,x)$). ReLU is computationally efficient and helps mitigate the vanishing gradient problem.
+
+For our application, the input layer $H^{(0)}$ will consist of individual features such as the treatment assignmen, age, gender, and past voting history. Variable selection will be performed using regualarization techniques and random forest feature importance scores. The output layer $H^{(L)}$ will produce the predicted probability of voting for $L$ hops in the neighborhood graph.
+
 \section{Regression Results \& Other Models}
 \subsection{OLS}
 To estimate the direct effects of the different social pressure treatments on voter turnout, we will explore all the widely used econometric methods in the literature. We will start with a simple OLS regression of the form:
