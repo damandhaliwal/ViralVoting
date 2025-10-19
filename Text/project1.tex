@@ -1,4 +1,4 @@
-\documentclass[11pt, draft]{article}
+\documentclass[11pt]{article}
  
 \usepackage[margin=1in]{geometry} 
 \usepackage{amsmath,amsthm,amssymb,bm}
@@ -17,7 +17,7 @@
 \usepackage{natbib}
 \usepackage{threeparttable}
 \usepackage{enumitem}
-
+\usepackage[T1]{fontenc}
 
 \setstretch{1.2}
 
@@ -40,7 +40,7 @@
 
     \vspace{0.5cm}
     
-    \Large{\textbf{DRAFT Project One}}
+    \Large{\textbf{Project One}}
     
     \vfill
     
@@ -50,7 +50,6 @@
     \vspace{0.8cm}
     
     \large{\today}
-    
 \end{titlepage}
 
 \section{Introduction}
@@ -154,119 +153,25 @@ where $\tilde{A} = A + I$ is the adjacency matrix of an undirected graph with ad
 
 For our application, the input layer $H^{(0)}$ will consist of individual features such as the treatment assignmen, age, gender, and past voting history. Variable selection will be performed using regualarization techniques and random forest feature importance scores. The output layer $H^{(L)}$ will produce the predicted probability of voting for $L$ hops in the neighborhood graph.
 
-\section{Regression Results \& Other Models}
-\subsection{OLS}
-To estimate the direct effects of the different social pressure treatments on voter turnout, we will explore all the widely used econometric methods in the literature. We will start with a simple OLS regression of the form:
-\begin{equation}
-    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \epsilon_i
-\end{equation}
-Where $Y_i$ is a binary variable that takes the value of 1 if the individual voted in the 2006 primary election and 0 otherwise. $CivicDuty_i$, $Hawthorne_i$, $Self_i$ and $Neighbors_i$ are binary variables that take the value of 1 if the individual was assigned to that treatment group and 0 otherwise. The control group is the omitted category. $\epsilon_i$ is the error term.
-Control variables for age, gender, and previous voting history will be added to the regression to increase precision. We will also cluster the standard errors at the household level to account for any correlation in the error terms within households.
-\begin{equation}
-    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_5 X_i + \epsilon_i
-\end{equation}
-Where $X_i$ is a vector of control variables. Results from the regression are presented in Table 2. 
-\begin{table}[H]
-    \input{../Output/Tables/regression_table.tex}
-    \caption{OLS Regression Results}        
-\end{table}
-The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by 8.02 percentage points. The Self treatment increases the probability of voting by 4.83 percentage points, the Hawthorne treatment by 2.57 percentage points and the Civic Duty treatment by 1.87 percentage points. There is also a very signficant positive effect of having voted in the 2004 primary election, increasing the probability of voting by 14.82 percentage points.
+\section{Empirical Results}
+\subsection{Identification Strategy}
+In the original study by \cite{gerber_social_2008}, the authors used a randomized controlled trial (RCT) design to identify the causal effects of different social pressure treatments on voter turnout. The experiment and the randomization process have already been described in Section 2. 
 
-\subsection{Identification Assumptions}
-The identification assumption for the OLS regression is that the treatment assignment is random and uncorrelated with the error term. Given the randomization in the original experiment, this assumption is likely to hold. The treatment covariate balance table is presented below:
-\input{../Output/Tables/treatment_covariate_balance.tex}
+This paper seeks to study the causal relationship between social pressure and its information diffusion effect (are neighbours of treated individuals acting differently than neighbours of untreated individuals?). We will rely on the randomization of the treatment assignment as well to identify the information diffusion effects of social pressure on voter turnout. Social pressure cannot be directly tracked, but the treatment by \cite{gerber_social_2008} presents a unique opportunity to study how information about social pressure diffuses through a social network.
 
-This shows that the randomization was effective. However, there may be some concerns about spillover effects from the Neighbors treatment to the control group. 
+For the linear model, randomization ensures that the treatment variables and the neighbors treated count are both exogenous. Therefore, we can estimate the parameters of interest using OLS regression. $\beta_1$ and $\beta_2$ can be interpreted as the average treatment effect of receiving a social pressure mailing and the average diffusion effect from having more neighbors treated, respectively.
+\begin{equation*}
+    \text{ATE}_{treatment} = E[Y_i(1, n) - Y_i(0, n)] = \beta_1
+\end{equation*}
+\begin{equation*}
+    \text{ATE}_{neighbors} = E[Y_i(t, n+1) - Y_i(t, n)] = \beta_2
+\end{equation*}
+Where $Y_i(t, n)$ is the potential outcome for household $i$ when they receive treatment $t$ and have $n$ neighbors treated.
 
-To estimate the these diffusion effects, consider the following plot showing the voter turnout in the control group against the neighbourhood treatment intensity:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{../Output/Plots/spillover_by_intensity.png}   
-    \caption{Voter Turnout in Control Group by Neighbourhood Treatment Intensity}
-    \label{fig:figure2}
-\end{figure}
-
-The clearly upward sloping trend shows that as the treatment intensity increases, the voter turnout in the control group also increases. This is a clear indication of positive information diffusion effects. To estimate the spillover effects more formally, we will run the following regression:
-\begin{equation}
-\begin{split}
-Y_i &= \beta_0 + \beta_1 \text{CivicDuty}_i + \beta_2 \text{Hawthorne}_i + \beta_3 \text{Self}_i \\
-    &\quad + \beta_4 \text{Neighbors}_i + \beta_5 \text{Intensity}_i + \beta_6 (\text{Neighbors}_i \times \text{Intensity}_i) + \beta_7 X_i + \epsilon_i
-\end{split}
-\end{equation}
-Where $Intensity_i$ is the treatment intensity in the neighbourhood of individual $i$. The interaction term $Neighbors_i \times Intensity_i$ captures the spillover effects of the Neighbors treatment. Results from the regression are presented in Table 3.
-\begin{table}[H]
-    \input{../Output/Tables/regression_interactions.tex}
-    \caption{OLS Regression Results with Interaction Term}        
-\end{table}
-The coefficient on the interaction term is negative but not statistically significant. This suggests that there are no significant spillover effects from the Neighbors treatment. However, we can improve our estimate further by utilizing causal machine learning methods.
-
-\subsection{Spatial Autoregressive Model}
-To account for potential spatial correlation in the error terms, we will use a spatial autorgressive model (SAR) (\cite{lord_chapter_2021}). The SAR model can be specified as:
-\begin{equation}
-    Y = \rho W Y + X\beta + \epsilon
-\end{equation}
-Where $Y$ is the vector of the outcome variable (voted in 2006), $W$ is the spatial weights matrix that captures the neighbourhood structure, $\rho$ is the spatial autoregressive coefficient, $X$ is the matrix of control variables and $\epsilon$ is the error term. The spatial weights matrix $W$ is constructed based on the geographical proximity of the households.
-
-Results from the SAR model are presented below:
-
-\begin{centering}
-    \input{../Output/Tables/sar_results.tex}
-\end{centering}
-
-This table shows that the spatial autoregressive coefficient $\rho$ is positive and statistically significant, indicating that there is positive spatial correlation in voter turnout. The treatment effects are still positive but only statistically signficant for the Neighbors and Self treatments. The magnitude of the treatment effects is also smaller compared to the OLS estimates. This suggests that some of the treatment effects estimated in the OLS regression may be due to spatial correlation in the error terms.
-
-\subsection{Regularization}
-To further support our findings and to regularize our estimates, we will use LASSO and Ridge regressions. We will use include the same variables as in the OLS regression:
-\begin{equation}
-    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_7 X_i + \epsilon_i
-\end{equation}
-Where $X_i$ is a vector of control variables. Results from the LASSO and Ridge regressions are presented in Table 4.
-
-Both LASSO and Ridge regression arrived at the same coefficient estimates for the 4 treatment variables. The coefficients are considerably smaller than the OLS estimates, however the relative ordering of the treatment effects is consistent. The LASSO and Ridge regression coefficient paths are plotted below:
-\begin{figure}[H]
-    \centering
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{../Output/Plots/lasso_coefficients.png}
-        \vspace{0.3em}
-        {\small LASSO coefficient path}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{../Output/Plots/ridge_coefficients.png}
-        \vspace{0.3em}
-        {\small Ridge coefficient path}
-    \end{minipage}
-    \caption{Regularization coefficient paths: LASSO (left) and Ridge (right)}
-    \label{fig:coef_paths}
-\end{figure}
-
-Both the LASSO and Ridge regression coefficient paths show similar patterns with the intensity variables. Ridge showed negative effects for both intensity and high cluster intensity whereas LASSO showed a negative effect for intensity but a positive effect for high cluster intensity. This might be due to the L2 penalty spreading the penalty across all variables unlike the L1 penalty which drives some coefficients to zero.
-
-\subsection{Machine Learning Methods}
-To further explore the treatment effects and the potential spillover effects, we will use causal machine learning methods such as Regression Trees, Random Forests, Bagging and Boosting. The results from the random tree are presented below:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{../Output/Plots/diffusion_classification_tree.png}   
-    \caption{Regression Tree}
-    \label{fig:regression_tree}
-\end{figure}
-The regression tree shows that the age, previous voting history and the Neighbors treatment are the most important variables in prediction. The regression tree also does not show that cluster intensity is an important variable to be a leading predictor for the outcome variable.
-
-However, the random forest results show that the cluster intensity is an important variable. The variable importance plot is presented below:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{../Output/Plots/random_forest_feature_importance.png}   
-    \caption{Random Forest Variable Importance Plot}
-    \label{fig:random_forest}
-\end{figure}
-The random forest importance matrix supports the findings from the regression tree. Age and previous voting history are important predictors, however, neighbourhood demographics and cluster treatment intensity are also important predictors.
-
-Results from the different machine learning models are presented below:
-\input{../Output/Tables/diffusion_ml_model_comparison.tex}
-
-It is clear from the results that the Random Forest model performs the best across all metrics. However, boosting provides results that are very close to the Random Forest model. The Random Forest model benefits from the restriction of the predictors to a random subset which highlights that there are strong predictors in the dataset such as age, previous voting history, neighbourhood demographics and cluster treatment intensity.
+The GNN model also relies on randomization to ensure that the results have a causal interpretation. Specifically, under random assignment, we are trying to estimate:
+\begin{equation*}
+    P(\text{vote} | \text{treatment}, \text{neighbors}, \text{features}) = P(\text{vote} | \text{do}(\text{treatment}), \text{neighbors}, \text{features})
+\end{equation*}
 
 \subsection{Directed Acyclic Graphs}
 Here's a DAG to illustrate the relationships between the variables in our study:
@@ -277,6 +182,124 @@ Here's a DAG to illustrate the relationships between the variables in our study:
     \label{fig:dag}
 \end{figure}
 In this DAG, the treatment groups (Civic Duty, Hawthorne, Self, Neighbors) directly influence the outcome variable (Voted in 2006). The control variables as well geographic proximity. (clustering) affects the information sharing node which affects the outcome variable for the control group. Simpler DAGs can be found in the appanedix.
+
+\subsection{Identification Assumptions}
+The identification strategy relies on the assumption that the treatment assignment is random and uncorrelated with the error term. Given the randomization in the original experiment, this assumption is likely to hold. The treatment covariate balance table is presented below:
+\input{../Output/Tables/treatment_covariate_balance.tex}
+
+This shows that the randomization was effective. However, there may be some concerns about spillover effects from the Neighbors treatment to the control group. 
+
+To estimate the effect of these diffusion effects, consider the following plot showing the voter turnout in the control group against the neighbourhood treatment intensity:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/spillover_by_intensity.png}   
+    \caption{Voter Turnout in Control Group by Neighbourhood Treatment Intensity}
+    \label{fig:figure2}
+\end{figure}
+
+The clearly upward sloping trend shows that as the treatment intensity increases, the voter turnout in the control group also increases. This is a clear indication of positive information diffusion effects. The identification assumption here is that the treatment intensity is exogenous and uncorrelated with other unobserved factors that may influence voter turnout. Given the randomization of the treatment assignment at the household level, this assumption is also likely to hold.
+
+
+\subsection{OLS}
+To estimate the direct effects of the different social pressure treatments on voter turnout, we will explore all the widely used econometric methods in the literature. We will start with a simple OLS regression of the form:
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \epsilon_i
+\end{equation}
+Where $Y_i$ is a binary variable that takes the value of 1 if the individual voted in the 2006 primary election and 0 otherwise. $CivicDuty_i$, $Hawthorne_i$, $Self_i$ and $Neighbors_i$ are binary variables that take the value of 1 if the individual was assigned to that treatment group and 0 otherwise. The control group is the omitted category. $\epsilon_i$ is the error term.
+Control variables for age, gender, and previous voting history will be added to the regression to increase precision. We will also cluster the standard errors at the household level to account for any correlation in the error terms within households.
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_5 X_i + \epsilon_i
+\end{equation}
+Where $X_i$ is a vector of control variables that includes sex, year of birth and voting history in the 2004 primary elections. Results from the regression are presented in Table 2. 
+The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by 8.02 percentage points. The Self treatment increases the probability of voting by 4.83 percentage points, the Hawthorne treatment by 2.57 percentage points and the Civic Duty treatment by 1.87 percentage points. There is also a very signficant positive effect of having voted in the 2004 primary election, increasing the probability of voting by 14.82 percentage points.
+
+Now to estimate the diffusion effects, we will include the neighborhood treatment intensity variable in the regression. The neighborhood treatment intensity is defined as the proportion of treated households in the same block as the individual. The regression model is specified as:
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_5 Intensity_i + \beta_6 X_i + \epsilon_i
+\end{equation}
+Where $Intensity_i$ is the neighborhood treatment intensity variable. Results from the regression are presented in Table 2.
+
+\begin{table}[H]
+    \centering
+    \caption{OLS Regression Results with Diffusion Effects}
+    \input{../Output/Tables/table3.tex}
+    \label{tab:ols_diffusion}
+\end{table}
+
+
+\subsection{Spatial Autoregressive Model}
+To account for potential spatial correlation in the error terms, we will use a spatial autorgressive model (SAR) (\cite{lord_chapter_2021}). The SAR model can be specified as:
+\begin{equation}
+    Y = \rho W Y + X\beta + \epsilon
+\end{equation}
+Where $Y$ is the vector of the outcome variable (voted in 2006), $W$ is the spatial weights matrix that captures the neighbourhood structure, $\rho$ is the spatial autoregressive coefficient, $X$ is the matrix of control variables and $\epsilon$ is the error term. The spatial weights matrix $W$ is constructed based on the geographical proximity of the households.
+
+Results from the SAR model are presented below:
+
+\begin{table}[H]
+    \begin{centering}
+        \input{../Output/Tables/table4.tex}
+    \end{centering}
+\end{table}
+
+This table shows that the spatial autoregressive coefficient $\rho$ is positive and statistically significant, indicating that there is positive spatial correlation in voter turnout. The treatment effects are still positive but only statistically signficant for the Neighbors and Self treatments. The magnitude of the treatment effects is also smaller compared to the OLS estimates. This suggests that some of the treatment effects estimated in the OLS regression may be due to spatial correlation in the error terms.
+
+\subsection{Regularization}
+To further support our findings and to regularize our estimates, we will use LASSO and Ridge regressions. The regression model is specified as:
+\begin{equation}
+    Y_i = \beta_0 + \beta_1 CivicDuty_i + \beta_2 Hawthorne_i + \beta_3 Self_i + \beta_4 Neighbors_i + \beta_5 Intensity_i + \beta_k X'_i + \epsilon_i
+\end{equation}
+Where $X'_i$ is a vector of covariates that includes sex, year of birth, previous voting history for the years 2000, 2002 and 2004 and census-level neighbourhood data such as education, race, etc. Results from the LASSO and Ridge regressions are presented in Table 4.
+
+Both LASSO and Ridge regression arrived at the same coefficient estimates for the 4 treatment variables. The coefficients are considerably smaller than the OLS estimates, however the relative ordering of the treatment effects is consistent. The LASSO and Ridge regression coefficient paths are plotted below:
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../Output/Plots/figure4a.png}
+        \vspace{0.3em}
+        {\small LASSO coefficient path}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../Output/Plots/figure4b.png}
+        \vspace{0.3em}
+        {\small Ridge coefficient path}
+    \end{minipage}
+    \caption{Regularization coefficient paths: LASSO (left) and Ridge (right)}
+    \label{fig:coef_paths}
+\end{figure}
+
+Both the LASSO and Ridge regression coefficient paths show similar patterns with the intensity variables. Ridge showed negative effects for both intensity and high cluster intensity whereas LASSO showed a negative effect for intensity but a positive effect for high cluster intensity. This might be due to the L2 penalty spreading the penalty across all variables unlike the L1 penalty which drives some coefficients to zero.
+
+\subsection{Graphical Neural Net}
+
+
+\subsection{Machine Learning Methods}
+To further explore the treatment effects and the potential spillover effects, we will use causal machine learning methods such as Regression Trees, Random Forests, Bagging and Boosting. The results from the random tree are presented below:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/figure5.png}   
+    \caption{Regression Tree}
+    \label{fig:regression_tree}
+\end{figure}
+The regression tree shows that the age, previous voting history and the Neighbors treatment are the most important variables in prediction. The regression tree also does not show that cluster intensity is an important variable to be a leading predictor for the outcome variable.
+
+However, the random forest results show that the cluster intensity is an important variable. The variable importance plot is presented below:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Output/Plots/figure6.png}   
+    \caption{Random Forest Variable Importance Plot}
+    \label{fig:random_forest}
+\end{figure}
+The random forest importance matrix supports the findings from the regression tree. Age and previous voting history are important predictors, however, neighbourhood demographics and cluster treatment intensity are also important predictors.
+
+Results from the different machine learning models are presented below:
+\input{../Output/Tables/table5.tex}
+
+It is clear from the results that the boosting model performs the best across all metrics. However, bagging and random forests provides results that are very close to the boosting model. 
+
 
 \section{Conclusion}
 The results from our statistical analysis clearly show that social pressure treatments have a positive and significant effect on voter turnout. They also show that the control group is influenced by the treatment intensity in their neighbourhood, suggesting that information diffusion effects are present. However, the spillover effects from the Neighbors treatment are not statistically significant in the OLS regression. However, causal machine learning methods suggest that neighbourhood demographics and cluster treatment intensity are important predictors of voter turnout.
