@@ -201,7 +201,7 @@ This shows that the randomization was effective. However, there may be some conc
 To estimate the effect of these diffusion effects, consider the following plot showing the voter turnout in the control group against the neighbourhood treatment intensity:
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{../Output/Plots/spillover_by_intensity.png}   
+    \includegraphics[width=0.9\textwidth]{../Output/Plots/spillover_by_intensity.png}   
     \caption{Voter Turnout in Control Group by Neighbourhood Treatment Intensity}
     \label{fig:figure2}
 \end{figure}
@@ -231,10 +231,12 @@ Where $Intensity_i$ is the neighborhood treatment intensity variable. Results fr
 \begin{table}[H]
     \centering
     \caption{OLS Regression Results with Diffusion Effects}
+    \vspace{-0.3cm}
     \input{../Output/Tables/table3.tex}
     \label{tab:ols_diffusion}
 \end{table}
 
+\vspace{-0.5cm}
 \subsubsection{Results Discussion}
 The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by approximately 8.02 to 8.13 percentage points. The Self treatment increases the probability of voting by 4.8 percentage points, the Hawthorne treatment by 2.5 percentage points and the Civic Duty treatment by 1.7 to 1.8 percentage points. 
 
@@ -246,10 +248,7 @@ To further check for robustness of the lack of diffusion effects and to account 
 \begin{equation}
     Y = \rho W Y + X\beta + \epsilon
 \end{equation}
-Where $Y$ is the vector of the outcome variable (voted in 2006), $W$ is the spatial weights matrix that captures the neighbourhood structure, $\rho$ is the spatial autoregressive coefficient, $X$ is the matrix of control variables and $\epsilon$ is the error term. The spatial weights matrix $W$ is constructed based on the geographical proximity of the households.
-
-Results from the SAR model are presented below:
-
+Where $Y$ is the vector of the outcome variable (voted in 2006), $W$ is the spatial weights matrix that captures the neighbourhood structure, $\rho$ is the spatial autoregressive coefficient, $X$ is the matrix of control variables and $\epsilon$ is the error term. The spatial weights matrix $W$ is constructed based on the geographical proximity of the households. Results from the SAR model are presented below:
 \begin{table}[H]
     \begin{centering}
         \input{../Output/Tables/table4.tex}
@@ -299,7 +298,10 @@ All input features were standardized to facilitate model optimization. The data 
 The model's success does suggest that there is some modest information diffusion occurring through neighborhood interactions. This shows that the non-linearity captured by the GNN is important in understanding how social pressure information spreads through geographical proximity.
 
 \subsection{Machine Learning Methods}
-To further explore non-linear patterns in the treatments effects and the information diffusion effects, we will use causal machine learning methods such as Regression Trees, Random Forests, Bagging and Boosting. The results from the random tree are presented below:
+To further explore non-linear patterns in the treatments effects and the information diffusion effects, we will use causal machine learning methods such as Regression Trees, Random Forests, Bagging and Boosting. 
+
+\subsubsection{Regression Trees and Random Forests}
+The results from the random tree are presented below:
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{../Output/Plots/figure5.png}   
@@ -317,10 +319,12 @@ The random forest importance matrix presented similar variables as the most impo
 \end{figure}
 The random forest importance matrix supports the findings from the regression tree. Age and previous voting history are important predictors, however, neighbourhood demographics are also important predictors. The treatment variables are below the neighbourhood demographics in importance with the neighbors and the self treatment being more important than hawthorne and civic duty which is in line with the regression results. The treatment intensity variable is also not an important predictor of the outcome variable.
 
+\subsubsection{Bagging and Boosting}
 Bagging and boosting models were also trained on the same data. For bagging, 300 trees were used with no limitation on the max depth to allow for maximum flexibility. For boosting, 100 trees were grown sequentially with a learning rate of 0.1 and a max depth of 3 to prevent overfitting.
 
 Bagging and an accuracy of 0.617 with a log loss of 0.639 and MSE of 0.225. Boosting achieved an accuracy of 0.696 with a log loss of 0.583 and MSE of 0.199. The sequential nature of boosting allows it to capture complex patterns in the data better than the other ensemble methods.
 
+\subsubsection{Results Discussion}
 Results from the different machine learning models and GNN are presented below:
 \input{../Output/Tables/table5.tex}
 
