@@ -63,17 +63,30 @@ def run_sar_analysis(num_neighbors=8):
     std_errors = model.std_err.flatten()
     beta_z_stats = z_statistics[1:] if len(z_statistics) > 1 else []
 
-    results_list = [
-        {'Variable': 'Spatial Lag ($\\rho$)', 'Coefficient': rho, 'Std. Error': rho_stderr, 'p-value': rho_p}]
+    results_list = []
+
+    results_list.append({
+        'Variable': 'Constant',
+        'Coefficient': betas[0],
+        'Std. Error': std_errors[0],
+        'p-value': beta_z_stats[0][1] if len(beta_z_stats) > 0 else np.nan
+    })
 
     for i, name in enumerate(clean_names):
-        p_val = beta_z_stats[i][1] if i < len(beta_z_stats) else np.nan
+        p_val = beta_z_stats[i + 1][1] if i + 1 < len(beta_z_stats) else np.nan
         results_list.append({
             'Variable': name,
-            'Coefficient': betas[i],
-            'Std. Error': std_errors[i],
+            'Coefficient': betas[i + 1],
+            'Std. Error': std_errors[i + 1],
             'p-value': p_val
         })
+
+    results_list.append({
+        'Variable': 'Spatial Lag ($\\rho$)',
+        'Coefficient': rho,
+        'Std. Error': rho_stderr,
+        'p-value': rho_p
+    })
 
     results = pd.DataFrame(results_list)
     _generate_sar_table(results, model.n, num_neighbors)

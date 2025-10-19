@@ -4,9 +4,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 from torch_geometric.data import Data
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import accuracy_score, roc_auc_score, log_loss
 import numpy as np
 import pandas as pd
 from data_clean import clean_data
@@ -14,21 +12,26 @@ from utils import get_project_paths
 
 
 class GNNVotingModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim=64, num_layers=2, dropout=0.5):
+    def __init__(self, input_dim, hidden_dim=32, num_layers=2, dropout=0.3):
         super(GNNVotingModel, self).__init__()
 
         self.convs = nn.ModuleList()
+        self.batch_norms = nn.ModuleList()
+
         self.convs.append(GCNConv(input_dim, hidden_dim))
+        self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
 
         for _ in range(num_layers - 2):
             self.convs.append(GCNConv(hidden_dim, hidden_dim))
+            self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
 
         self.convs.append(GCNConv(hidden_dim, 1))
         self.dropout = dropout
 
     def forward(self, x, edge_index):
-        for i, conv in enumerate(self.convs[:-1]):
+        for i, (conv, bn) in enumerate(zip(self.convs[:-1], self.batch_norms)):
             x = conv(x, edge_index)
+            x = bn(x)
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
 
@@ -36,80 +39,126 @@ class GNNVotingModel(nn.Module):
         return torch.sigmoid(x)
 
 
-def run_gnn_analysis(hidden_dim=64, num_layers=2, epochs=200, lr=0.01, k_neighbors=8, feature_selection_threshold=0.01):
+def run_gnn_analysis(hidden_dim=32, num_layers=2, epochs=10000, lr=0.0001, sample_size=None, print_every=100):
     data = clean_data()
     paths = get_project_paths()
 
-    exclude_cols = ['voted', 'treatment', 'hh_id', 'cluster', 'zip', 'zip_clean', 'tract', 'block',
-                    'treatment_intensity', 'high_block_intensity', 'cluster_size']
-    numeric_data = data.select_dtypes(include=[np.number])
-    all_features = [col for col in numeric_data.columns if col not in exclude_cols]
+    treatment_vars = ['treatment_civic duty', 'treatment_hawthorne', 'treatment_neighbors', 'treatment_self']
+    control_vars = ['sex', 'yob', 'g2000', 'g2002', 'p2004', 'p2000', 'p2002']
 
-    rf = RandomForestClassifier(n_estimators=100, random_state=42, max_depth=5)
-    rf.fit(data[all_features], data['voted'])
+    feature_cols = treatment_vars + control_vars
+    feature_cols = [col for col in feature_cols if col in data.columns]
 
-    feature_importance = pd.DataFrame({
-        'feature': all_features,
-        'importance': rf.feature_importances_
-    }).sort_values('importance', ascending=False)
+    if 'zip' not in data.columns or 'plus4' not in data.columns:
+        raise ValueError("Need 'zip' and 'plus4' columns for neighborhood definition")
 
-    selected_features = feature_importance[
-        feature_importance['importance'] > feature_selection_threshold
-        ]['feature'].tolist()
+    data = data.dropna(subset=feature_cols + ['voted', 'zip', 'plus4'])
 
-    block_data = data.groupby('block').agg({
-        **{feat: 'mean' for feat in selected_features},
-        'voted': 'mean'
-    }).reset_index()
+    data['zip_plus4'] = data['zip'].astype(str).str.zfill(5) + '-' + data['plus4'].astype(str).str.zfill(4)
 
-    block_to_idx = {block: idx for idx, block in enumerate(block_data['block'])}
-    block_data['node_idx'] = block_data['block'].map(block_to_idx)
+    zip_counts = data['zip_plus4'].value_counts()
+    valid_zips = zip_counts[zip_counts > 1].index
+    data = data[data['zip_plus4'].isin(valid_zips)]
 
-    block_features = block_data[['block'] + selected_features].copy()
-    block_features['block_num'] = block_features['block'].astype('category').cat.codes
+    if len(data) == 0:
+        raise ValueError("No ZIP+4 codes with multiple households")
 
-    nbrs = NearestNeighbors(n_neighbors=k_neighbors + 1, algorithm='auto')
-    nbrs.fit(block_features[['block_num']].values)
-    distances, indices = nbrs.kneighbors(block_features[['block_num']].values)
+    if sample_size and len(data) > sample_size:
+        data = data.sample(n=sample_size, random_state=42).reset_index(drop=True)
+
+    data['node_idx'] = range(len(data))
 
     edge_list = []
-    for i, neighbors in enumerate(indices):
-        for j in neighbors[1:]:
-            edge_list.append([i, j])
-            edge_list.append([j, i])
+    for zip_plus4_id, zip_group in data.groupby('zip_plus4'):
+        nodes_in_zip = zip_group['node_idx'].values
+        for i, node_i in enumerate(nodes_in_zip):
+            for node_j in nodes_in_zip[i + 1:]:
+                edge_list.append([node_i, node_j])
+                edge_list.append([node_j, node_i])
 
     if len(edge_list) == 0:
         raise ValueError("No edges created in graph")
 
     edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()
 
-    x = torch.tensor(block_data[selected_features].values, dtype=torch.float)
-    y = torch.tensor(block_data['voted'].values, dtype=torch.float).unsqueeze(1)
+    X_data = data[feature_cols].values
+    X_mean = X_data.mean(axis=0)
+    X_std = X_data.std(axis=0)
+    X_std[X_std == 0] = 1
+    X_scaled = (X_data - X_mean) / X_std
 
-    num_nodes = len(block_data)
-    indices = np.arange(num_nodes)
+    x = torch.tensor(X_scaled, dtype=torch.float)
+    y = torch.tensor(data['voted'].values, dtype=torch.float).unsqueeze(1)
 
-    y_binary = (y.numpy() > 0.5).astype(int).flatten()
-    train_idx, test_idx = train_test_split(indices, test_size=0.2, random_state=42, stratify=y_binary)
+    num_nodes = len(data)
+    indices_array = np.arange(num_nodes)
+    train_idx, val_idx, test_idx = np.split(
+        indices_array[np.random.RandomState(42).permutation(num_nodes)],
+        [int(0.7 * num_nodes), int(0.85 * num_nodes)]
+    )
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    val_mask = torch.zeros(num_nodes, dtype=torch.bool)
     test_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_idx] = True
+    val_mask[val_idx] = True
     test_mask[test_idx] = True
 
-    graph_data = Data(x=x, edge_index=edge_index, y=y, train_mask=train_mask, test_mask=test_mask)
+    graph_data = Data(x=x, edge_index=edge_index, y=y, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
 
-    model = GNNVotingModel(input_dim=len(selected_features), hidden_dim=hidden_dim, num_layers=num_layers)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
-    criterion = nn.MSELoss()
+    model = GNNVotingModel(input_dim=len(feature_cols), hidden_dim=hidden_dim, num_layers=num_layers)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=200)
+    criterion = nn.BCELoss()
 
-    model.train()
+    best_val_auc = 0
+    patience_counter = 0
+    patience = 1000
+
+    print(f"Starting training: {num_nodes} nodes, {edge_index.shape[1] // 2} edges")
+    print(f"Epochs: {epochs}, LR: {lr}, Hidden: {hidden_dim}")
+    print("-" * 80)
+
     for epoch in range(epochs):
+        model.train()
         optimizer.zero_grad()
         out = model(graph_data.x, graph_data.edge_index)
         loss = criterion(out[graph_data.train_mask], graph_data.y[graph_data.train_mask])
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
+
+        if (epoch + 1) % print_every == 0 or epoch == 0:
+            model.eval()
+            with torch.no_grad():
+                val_out = model(graph_data.x, graph_data.edge_index)
+                val_loss = criterion(val_out[graph_data.val_mask], graph_data.y[graph_data.val_mask])
+                val_preds = val_out[graph_data.val_mask].numpy().flatten()
+                val_labels = graph_data.y[graph_data.val_mask].numpy().flatten()
+                val_auc = roc_auc_score(val_labels, val_preds)
+
+                train_preds = out[graph_data.train_mask].detach().numpy().flatten()
+                train_labels = graph_data.y[graph_data.train_mask].numpy().flatten()
+                train_auc = roc_auc_score(train_labels, train_preds)
+
+                print(f"Epoch {epoch + 1:5d} | Train Loss: {loss.item():.4f} | Val Loss: {val_loss.item():.4f} | "
+                      f"Train AUC: {train_auc:.4f} | Val AUC: {val_auc:.4f} | Best: {best_val_auc:.4f}")
+
+                scheduler.step(val_auc)
+
+                if val_auc > best_val_auc:
+                    best_val_auc = val_auc
+                    patience_counter = 0
+                    best_model_state = model.state_dict().copy()
+                    print(f">>> New best validation AUC: {best_val_auc:.4f}")
+                else:
+                    patience_counter += print_every
+
+                if patience_counter >= patience:
+                    print(f"\nEarly stopping at epoch {epoch + 1}")
+                    break
+
+    model.load_state_dict(best_model_state)
 
     model.eval()
     with torch.no_grad():
@@ -117,32 +166,44 @@ def run_gnn_analysis(hidden_dim=64, num_layers=2, epochs=200, lr=0.01, k_neighbo
 
         train_preds = predictions[graph_data.train_mask].numpy().flatten()
         train_labels = graph_data.y[graph_data.train_mask].numpy().flatten()
+        train_preds_binary = (train_preds > 0.5).astype(int)
 
         test_preds = predictions[graph_data.test_mask].numpy().flatten()
         test_labels = graph_data.y[graph_data.test_mask].numpy().flatten()
+        test_preds_binary = (test_preds > 0.5).astype(int)
 
-        train_mse = mean_squared_error(train_labels, train_preds)
-        train_mae = mean_absolute_error(train_labels, train_preds)
-        train_r2 = r2_score(train_labels, train_preds)
+        train_accuracy = accuracy_score(train_labels, train_preds_binary)
+        train_auc = roc_auc_score(train_labels, train_preds)
+        train_logloss = log_loss(train_labels, train_preds)
 
-        test_mse = mean_squared_error(test_labels, test_preds)
-        test_mae = mean_absolute_error(test_labels, test_preds)
-        test_r2 = r2_score(test_labels, test_preds)
+        test_accuracy = accuracy_score(test_labels, test_preds_binary)
+        test_auc = roc_auc_score(test_labels, test_preds)
+        test_logloss = log_loss(test_labels, test_preds)
+
+    print("\n" + "=" * 80)
+    print("FINAL RESULTS")
+    print("=" * 80)
+    print(f"Test Accuracy: {test_accuracy:.4f}")
+    print(f"Test AUC: {test_auc:.4f}")
+    print(f"Test Log Loss: {test_logloss:.4f}")
+    print("=" * 80)
 
     results = {
         'model': model,
         'graph_data': graph_data,
-        'selected_features': selected_features,
-        'feature_importance': feature_importance,
-        'train_mse': train_mse,
-        'train_mae': train_mae,
-        'train_r2': train_r2,
-        'test_mse': test_mse,
-        'test_mae': test_mae,
-        'test_r2': test_r2,
+        'feature_names': feature_cols,
+        'train_accuracy': train_accuracy,
+        'train_auc': train_auc,
+        'train_logloss': train_logloss,
+        'test_accuracy': test_accuracy,
+        'test_auc': test_auc,
+        'test_logloss': test_logloss,
         'num_nodes': num_nodes,
         'num_edges': edge_index.shape[1] // 2,
-        'num_features': len(selected_features)
+        'num_features': len(feature_cols),
+        'avg_neighbors': edge_index.shape[1] / num_nodes,
+        'epochs_trained': epoch + 1,
+        'best_val_auc': best_val_auc
     }
 
     return results

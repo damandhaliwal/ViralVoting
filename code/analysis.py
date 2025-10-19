@@ -1,23 +1,15 @@
 from data_clean import clean_data
 from utils import get_project_paths
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # print summary statistics of the data with a few variables
 def summary_statistics():
-    """
-    Prints summary statistics of the data with a few variables.
-    
-    Args:
-        data (pd.DataFrame): The input DataFrame containing the data.
-    """
 
     data = clean_data()
 
     # Select relevant columns for summary statistics
-    summary_cols = ['sex', 'yob', 'g2000', 'g2002', 'g2004', 'p2000', 'p2002', 'voted', 'treatment_control', 'treatment_self', 'treatment_civic duty', 'treatment_neighbors', 'treatment_hawthorne']
+    summary_cols = ['sex', 'yob', 'p2004', 'voted', 'treatment_control', 'treatment_self', 'treatment_civic duty', 'treatment_neighbors', 'treatment_hawthorne']
     summary_data = data[summary_cols]
 
     # Rename columns to be cleaner (NO underscores for LaTeX)
@@ -28,11 +20,7 @@ def summary_statistics():
         'treatment_neighbors': 'Neighbors',
         'treatment_hawthorne': 'Hawthorne',
         'yob': 'Year of Birth',
-        'g2000': 'Voted in 2000 General Elections',
-        'g2002': 'Voted in 2002 General Elections',
-        'g2004': 'Voted in 2004 General Elections',
-        'p2000': 'Voted in 2000 Primary Elections',
-        'p2002': 'Voted in 2002 Primary Elections',
+        'p2004': 'Voted in 2004 Primary Elections',
     })
 
     basic_stats = summary_data.describe(include='all')
@@ -43,8 +31,7 @@ def summary_statistics():
     
     # Add counts of 0s and 1s for binary variables
     binary_cols = ['sex', 'voted', 'Control', 'Self', 'Civic Duty', 'Neighbors', 'Hawthorne',
-                   'Voted in 2000 General Elections', 'Voted in 2002 General Elections', 'Voted in 2004 General Elections',
-                   'Voted in 2000 Primary Elections', 'Voted in 2002 Primary Elections']
+                   'Voted in 2004 Primary Elections']
     
     # Add count_0 and count_1 rows
     count_0 = pd.Series(index=basic_stats.columns)
@@ -60,13 +47,17 @@ def summary_statistics():
     basic_stats.loc['Ones'] = count_1
     
     latex_output = basic_stats.to_latex(
-        caption='Summary Statistics',
-        label='tab:summary_stats',
         escape=False,
         column_format='l' + 'r' * len(basic_stats.columns),
         na_rep='-',
         float_format='%.2f'
     )
+
+    # Remove outer table environment & caption
+    latex_output = latex_output.replace('\\begin{table}', '')
+    latex_output = latex_output.replace('\\end{table}', '')
+    latex_output = latex_output.replace('\\caption{}', '')
+    latex_output = latex_output.replace('\\label{}', '')
 
     paths = get_project_paths()
     with open(paths['tables'] + 'table1.tex', 'w') as f:
@@ -74,7 +65,6 @@ def summary_statistics():
 
 
 def treatment_covariate_balance_table(reference_year: int = 2004):
-    """Generate household-level covariate balance table by treatment group."""
     data = clean_data().copy()
     paths = get_project_paths()
 
@@ -123,7 +113,7 @@ def treatment_covariate_balance_table(reference_year: int = 2004):
         return formatted
 
     lines = []
-    lines.append('\\begin{table}[ht]')
+    lines.append('\\begin{table}[H]')
     lines.append('\\centering')
     lines.append('\\caption{Relationship between Treatment Group Assignment and Covariates (Household-Level Data)}')
     lines.append('\\label{tab:household_balance}')
@@ -149,14 +139,36 @@ def treatment_covariate_balance_table(reference_year: int = 2004):
     lines.append('\\end{table}')
     
     latex_table = '\n'.join(lines)
-    output_path = paths['tables'] + 'treatment_covariate_balance.tex'
+    output_path = paths['tables'] + 'table2.tex'
     with open(output_path, 'w') as handle:
         handle.write(latex_table)
 
-    print(f'Saved treatment covariate balance table to: {output_path}')
 
+def create_spillover_intensity_plot():
+    data = clean_data()
+    paths = get_project_paths()
 
-if __name__ == '__main__':
-    summary_statistics()
-    treatment_covariate_balance_table()
+    control_only = data[data['treatment_control'] == 1].copy()
+    control_only = control_only.dropna(subset=['voted', 'treatment_intensity'])
 
+    if len(control_only) > 0:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        control_only['intensity_bin'] = pd.cut(control_only['treatment_intensity'], bins=10)
+        intensity_voting = control_only.groupby('intensity_bin', observed=True)['voted'].mean()
+
+        bin_centers = [interval.mid for interval in intensity_voting.index]
+        ax.plot(bin_centers, intensity_voting.values, marker='o', linewidth=2, markersize=8)
+        ax.set_xlabel('Treatment Intensity in Cluster')
+        ax.set_ylabel('Voting Rate (Control Group Only)')
+        ax.set_title('Spillover Effect: Control Group Voting by Neighborhood Treatment Intensity')
+        ax.grid(True, alpha=0.3)
+        plt.tight_layout()
+
+        output_path = paths['plots'] + 'spillover_by_intensity.png'
+        plt.savefig(output_path, dpi=600, bbox_inches='tight')
+        plt.close()
+
+        return output_path
+
+    return None

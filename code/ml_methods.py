@@ -372,7 +372,9 @@ def boosting_classifier(
 
 def run_model_comparison(
         feature_strategy: Literal["minimal", "core", "all"] = "core",
-        random_state: int = 42
+        random_state: int = 42,
+        include_gnn: bool = False,
+        gnn_results: Optional[dict] = None
 ) -> dict:
     tree_results = classification_tree(
         feature_strategy=feature_strategy,
@@ -437,6 +439,26 @@ def run_model_comparison(
         },
     ]
 
+    # Add GNN if requested or if results provided
+    if include_gnn or gnn_results is not None:
+        if gnn_results is None:
+            # Import and run GNN
+            from GNN import run_gnn_analysis
+            print("Running GNN analysis (this will take several hours)...")
+            gnn_results = run_gnn_analysis()
+
+        # Add GNN to comparison
+        comparison_data.append({
+            "Model": "GNN",
+            "Accuracy": gnn_results["test_accuracy"],
+            "Precision": np.nan,  # GNN doesn't compute precision/recall/f1
+            "Recall": np.nan,
+            "F1": np.nan,
+            "ROC AUC": gnn_results["test_auc"],
+            "Log Loss": gnn_results["test_logloss"],
+            "MSE": np.nan,  # GNN doesn't compute MSE
+        })
+
     comparison_df = pd.DataFrame(comparison_data)
 
     paths = get_project_paths()
@@ -444,7 +466,8 @@ def run_model_comparison(
     latex_table = comparison_df.to_latex(
         index=False,
         float_format="%.3f",
-        caption="Model Comparison: Tree, Forest, Bagging, Boosting",
+        caption="Model Comparison: Tree, Forest, Bagging, Boosting" + (
+            ", and GNN" if (include_gnn or gnn_results) else ""),
         label="tab:model_comparison",
     )
 
@@ -452,11 +475,17 @@ def run_model_comparison(
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(latex_table)
 
-    return {
+
+    result = {
         "comparison_df": comparison_df,
         "tree_results": tree_results,
         "forest_results": forest_results,
         "bagging_results": bagging_results,
         "boosting_results": boosting_results,
-        "latex_path": output_path
+        "latex_path": output_path,
     }
+
+    if include_gnn or gnn_results is not None:
+        result["gnn_results"] = gnn_results
+
+    return result

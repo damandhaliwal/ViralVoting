@@ -94,8 +94,38 @@ def run_ridge_analysis(plot_top_n=None):
     }
 
     _create_coefficient_plot(results, paths, plot_top_n)
+    _print_results(results, 'RIDGE')
 
     return results
+
+
+def _print_results(results, method_name):
+    print("\n" + "=" * 60)
+    print(f"{method_name} REGRESSION RESULTS")
+    print("=" * 60)
+    print(f"Optimal λ: {results['optimal_lambda']:.6f}")
+    print(f"Optimal C: {results['optimal_C']:.6f}")
+
+    print("\nTest Set Performance:")
+    print(f"  Accuracy:  {results['test_accuracy']:.4f}")
+    print(f"  Precision: {results['test_precision']:.4f}")
+    print(f"  Recall:    {results['test_recall']:.4f}")
+    print(f"  F1 Score:  {results['test_f1']:.4f}")
+    print(f"  ROC AUC:   {results['test_auc']:.4f}")
+    print(f"  Log Loss:  {results['test_logloss']:.4f}")
+
+    print("\nTrain Set Performance:")
+    print(f"  Accuracy:  {results['train_accuracy']:.4f}")
+    print(f"  ROC AUC:   {results['train_auc']:.4f}")
+
+    print("\nTreatment Effects (Coefficients):")
+    for i, name in enumerate(results['feature_names']):
+        if 'treatment' in name:
+            coef = results['coefficients'][i]
+            me = results['marginal_effects'][i]
+            print(f"  {name:30s}: {coef:8.4f} (ME: {me:7.4f})")
+
+    print("=" * 60)
 
 
 def _create_coefficient_plot(results, paths, plot_top_n=None):
@@ -148,5 +178,3 @@ def _create_coefficient_plot(results, paths, plot_top_n=None):
     plt.tight_layout()
     plt.savefig(paths['plots'] + 'figure4b.png', dpi=600, bbox_inches='tight')
     plt.close()
-
-run_ridge_analysis()
