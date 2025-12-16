@@ -1,3 +1,8 @@
+# Spatial Autoregressive Model
+# Daman Dhaliwal
+import os
+
+# import libraries
 import numpy as np
 import pandas as pd
 from data_clean import clean_data
@@ -40,12 +45,35 @@ def run_sar_analysis(num_neighbors=8):
     spatial_weights = KNN(coords, k=num_neighbors)
     spatial_weights.transform = 'r'
 
-    treatment_vars = ['treatment_civic duty', 'treatment_hawthorne', 'treatment_self', 'treatment_neighbors']
+    base_treatments = [
+        'treatment_civic duty',
+        'treatment_hawthorne',
+        'treatment_self',
+        'treatment_neighbors'
+    ]
+
+    interaction_vars = []
+    for treat in base_treatments:
+        inter_name = f'{treat}_x_intensity'
+        data[inter_name] = data[treat] * data['treatment_intensity']
+        interaction_vars.append(inter_name)
+
+    treatment_vars = base_treatments + ['treatment_intensity'] + interaction_vars
+
     control_vars = ['sex', 'yob', 'p2004']
+
     all_features = treatment_vars + control_vars
     available_features = [f for f in all_features if f in data.columns]
 
     name_mapping = get_clean_variable_names()
+    if 'treatment_intensity' not in name_mapping:
+        name_mapping['treatment_intensity'] = 'Neighborhood Intensity'
+
+    for treat in base_treatments:
+        clean_base = name_mapping.get(treat, treat)
+        inter_key = f'{treat}_x_intensity'
+        name_mapping[inter_key] = f'{clean_base} x Intensity'
+
     clean_names = [name_mapping.get(var, var) for var in available_features]
 
     X = data[available_features].values
@@ -54,14 +82,21 @@ def run_sar_analysis(num_neighbors=8):
     model = GM_Lag(y, X, w=spatial_weights, name_y='Voted', name_x=clean_names)
 
     rho = float(model.rho[0])
-    rho_stderr = float(model.std_err_rho) if hasattr(model, 'std_err_rho') else np.nan
-    z_statistics = model.z_stat if hasattr(model, 'z_stat') else []
-    rho_z = z_statistics[0][0] if z_statistics else np.nan
-    rho_p = z_statistics[0][1] if z_statistics else np.nan
+
+    rho_variance = model.vm[-1, -1]
+    rho_stderr = np.sqrt(rho_variance)
+
+    from scipy.stats import norm
+    if rho_stderr > 0:
+        z_score = rho / rho_stderr
+        rho_p = 2 * (1 - norm.cdf(abs(z_score)))
+    else:
+        rho_p = np.nan
 
     betas = model.betas.flatten()
     std_errors = model.std_err.flatten()
-    beta_z_stats = z_statistics[1:] if len(z_statistics) > 1 else []
+
+    z_statistics = model.z_stat if hasattr(model, 'z_stat') else []
 
     results_list = []
 
@@ -69,16 +104,16 @@ def run_sar_analysis(num_neighbors=8):
         'Variable': 'Constant',
         'Coefficient': betas[0],
         'Std. Error': std_errors[0],
-        'p-value': beta_z_stats[0][1] if len(beta_z_stats) > 0 else np.nan
+        'p-value': z_statistics[0][1] if len(z_statistics) > 0 else np.nan
     })
 
     for i, name in enumerate(clean_names):
-        p_val = beta_z_stats[i + 1][1] if i + 1 < len(beta_z_stats) else np.nan
+        idx = i + 1
         results_list.append({
             'Variable': name,
-            'Coefficient': betas[i + 1],
-            'Std. Error': std_errors[i + 1],
-            'p-value': p_val
+            'Coefficient': betas[idx],
+            'Std. Error': std_errors[idx],
+            'p-value': z_statistics[idx][1] if idx < len(z_statistics) else np.nan
         })
 
     results_list.append({
@@ -89,6 +124,7 @@ def run_sar_analysis(num_neighbors=8):
     })
 
     results = pd.DataFrame(results_list)
+
     _generate_sar_table(results, model.n, num_neighbors)
 
     return model, results
@@ -109,34 +145,56 @@ def _generate_sar_table(results, n_obs, num_neighbors):
         return f'{coef:.4f}'
 
     lines = []
+
+    lines.append('\\begin{threeparttable}')
+
     lines.append('\\caption{Spatial Autoregressive Model Results}')
     lines.append('\\label{tab:sar_results}')
-    lines.append('\\begin{center}')
-    lines.append('\\begin{tabular}{lc}')
+
+    lines.append('\\begin{tabular}{l r}')
     lines.append('\\hline')
-    lines.append(' & Voted \\\\')
+    lines.append('Variable & \\multicolumn{1}{c}{Coefficient} \\\\')
     lines.append('\\hline')
 
     for _, row in results.iterrows():
         var_name = row['Variable']
         coef_str = format_with_stars(row['Coefficient'], row['p-value'])
-        stderr_str = f"({row['Std. Error']:.4f})"
+
+        if pd.notna(row['Std. Error']):
+            stderr_str = f"({row['Std. Error']:.4f})"
+        else:
+            stderr_str = ""
+
         lines.append(f"{var_name} & {coef_str} \\\\")
         lines.append(f" & {stderr_str} \\\\")
 
     lines.append('\\midrule')
-    lines.append(f'N & {int(n_obs):,} \\\\')
-    lines.append(f'Neighbors & {num_neighbors} \\\\')
+    lines.append(f'Observations & {int(n_obs):,} \\\\')
+    lines.append(f'Neighbors (k) & {num_neighbors} \\\\')
     lines.append('\\hline')
     lines.append('\\end{tabular}')
-    lines.append('\\end{center}')
-    lines.append('\\bigskip')
-    lines.append('Standard errors in parentheses. \\newline')
-    lines.append('* p<.1, ** p<.05, *** p<.01')
+
+    lines.append('\\begin{tablenotes}')
+    lines.append('\\small')
+    lines.append('\\item Standard errors in parentheses.')
+    lines.append('\\item * p<.1, ** p<.05, *** p<.01')
+    lines.append('\\end{tablenotes}')
+
+    lines.append('\\end{threeparttable}')
 
     latex_output = '\n'.join(lines)
 
-    with open(paths['tables'] + 'table4.tex', 'w') as f:
+    output_dir = paths['tables']
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'table5.tex'
+
+    with open(output_path, 'w') as f:
         f.write(latex_output)
 
     return latex_output
+
+
+if __name__ == "__main__":
+    run_sar_analysis()
