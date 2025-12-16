@@ -9,6 +9,7 @@ from utils import get_project_paths
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, log_loss
 from sklearn.model_selection import train_test_split
+import os
 
 def run_ridge_analysis(plot_top_n=None):
     data = clean_data()
