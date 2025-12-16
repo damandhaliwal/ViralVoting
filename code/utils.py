@@ -1,19 +1,13 @@
+# utility functions as required
+# Daman Dhaliwal
+
+# import libraries
 import os
 import pandas as pd
 import numpy as np
 from typing import Literal, Optional
 
 def get_project_paths():
-    """
-    Returns a dictionary with paths to important directories in the project.
-
-    Returns:
-        dict: Dictionary with the following keys:
-            - parent_dir: Parent directory of the code folder
-            - data_dir: Path to the Data directory
-            - plots_dir: Path to the Output/Plots directory
-            - tables_dir: Path to the Output/Tables directory
-    """
     # Get the parent directory of the current file
     code_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(code_dir)
@@ -49,20 +43,6 @@ def select_features(
     data: pd.DataFrame,
     strategy: Literal["minimal", "core", "all"] = "core"
 ) -> list[str]:
-    """Select features based on strategy.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        Full dataset
-    strategy : {"minimal", "core", "all"}
-        Feature selection strategy
-
-    Returns
-    -------
-    list[str]
-        List of column names to use
-    """
     if strategy == "minimal":
         candidate = MINIMAL_FEATURES
     elif strategy == "core":
@@ -78,20 +58,7 @@ def prepare_features(
     data: pd.DataFrame,
     feature_cols: list[str]
 ) -> tuple[np.ndarray, list[str]]:
-    """One-hot encode and handle missing values.
 
-    Parameters
-    ----------
-    data : pd.DataFrame
-        Dataset with selected features
-    feature_cols : list[str]
-        Columns to use as features
-
-    Returns
-    -------
-    tuple[np.ndarray, list[str]]
-        Feature matrix and final feature names
-    """
     X_df = data[feature_cols].copy()
 
     # One-hot encode categorical columns
@@ -111,24 +78,7 @@ def subsample_data(
     sample_size: Optional[int],
     random_state: int = 0
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Randomly subsample data if sample_size specified.
 
-    Parameters
-    ----------
-    X : np.ndarray
-        Feature matrix
-    y : np.ndarray
-        Target vector
-    sample_size : int or None
-        Number of samples to draw (None = use all)
-    random_state : int
-        Random seed
-
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray]
-        Subsampled X and y
-    """
     if sample_size is None or sample_size >= X.shape[0]:
         return X, y
 
