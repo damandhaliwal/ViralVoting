@@ -6,6 +6,7 @@ from data_clean import clean_data
 from utils import get_project_paths
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 # print summary statistics of the data with a few variables
 def summary_stats():
@@ -135,7 +136,54 @@ def balance_table():
     )
     return
 
+# intensity plot
+def plot_spillover():
+    data = clean_data()
+    paths = get_project_paths()
+
+    control_data = data[data['treatment'] == 'control'].copy()
+
+    control_data['intensity_bin'] = pd.cut(control_data['treatment_intensity'], bins=10)
+
+    plot_data = control_data.groupby('intensity_bin', observed=False).agg({
+        'treatment_intensity': 'mean',
+        'voted': 'mean',
+        'hh_id': 'count'
+    }).reset_index()
+
+    plot_data = plot_data.dropna()
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        plot_data['treatment_intensity'],
+        plot_data['voted'],
+        marker='o',
+        linestyle='-',
+        linewidth=2,
+        markersize=8,
+        color='#1f77b4'
+    )
+
+    # Formatting
+    plt.title('Spillover Effect: Control Group Voting by Neighborhood Treatment Intensity')
+    plt.xlabel('Treatment Intensity in Cluster')
+    plt.ylabel('Voting Rate (Control Group Only)')
+    plt.grid(True, linestyle='-', alpha=0.3)
+
+    # 5. Save Figure
+    output_dir = paths['plots']
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'figure_2.png'
+    plt.savefig(output_path, dpi=600, bbox_inches='tight')
+    plt.close()  # Close memory
+
+    return
+
 if __name__ == "__main__":
     summary_stats()
     guilt_analysis()
     balance_table()
+    plot_spillover()
