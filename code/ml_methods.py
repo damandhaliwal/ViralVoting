@@ -132,7 +132,7 @@ def classification_tree(
         clf,
         feature_names,
         "Classification Tree Predicting Voting (Yes/No)",
-        "figure5.png",
+        "figure4.png",
         class_names=["No", "Yes"],
         figsize=(30, 16)
     )
@@ -223,7 +223,7 @@ def random_forest_classifier(
         f"n_estimators={n_estimators}, max_depth={max_depth}, leaf≥{min_samples_leaf}"
     )
 
-    plot_path = paths["plots"] + "figure6.png"
+    plot_path = paths["plots"] + "figure5.png"
     plt.tight_layout()
     plt.savefig(plot_path, dpi=600, bbox_inches="tight")
     plt.close(fig)

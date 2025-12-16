@@ -1,3 +1,7 @@
+# ridge analysis save coefficients and coefficient plots
+# Daman Dhaliwal
+
+# import libraries
 import numpy as np
 import matplotlib.pyplot as plt
 from data_clean import clean_data
@@ -6,21 +10,35 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, log_loss
 from sklearn.model_selection import train_test_split
 
-
 def run_ridge_analysis(plot_top_n=None):
     data = clean_data()
     paths = get_project_paths()
 
+    data = data.loc[:, ~data.columns.duplicated()]
+
     treatment_vars = ['treatment_civic duty', 'treatment_hawthorne', 'treatment_neighbors', 'treatment_self']
     control_vars = ['sex', 'yob', 'g2000', 'g2002', 'p2004', 'p2000', 'p2002']
     intensity_vars = ['treatment_intensity', 'high_block_intensity']
-    feature_names = treatment_vars + control_vars + intensity_vars
 
-    X = np.array(data[feature_names])
+    interaction_vars = []
+    for treat in treatment_vars:
+        inter_name = f"{treat}_x_intensity"
+        data[inter_name] = data[treat] * data['treatment_intensity']
+        interaction_vars.append(inter_name)
+    
+    requested_features = treatment_vars + intensity_vars + interaction_vars + control_vars
+    
+    X_df = data[requested_features].copy()
+    X_df = X_df.loc[:, ~X_df.columns.duplicated()]
+    
+    feature_names = X_df.columns.tolist()
+    
+    X = np.array(X_df)
     y = np.array(data['voted'])
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
+    # Scaling (Standardization)
     train_mean = X_train.mean(axis=0)
     train_std = X_train.std(axis=0)
     train_std[train_std == 0] = 1
@@ -28,6 +46,7 @@ def run_ridge_analysis(plot_top_n=None):
     X_train_scaled = (X_train - train_mean) / train_std
     X_test_scaled = (X_test - train_mean) / train_std
 
+    # Ridge Model
     lambdas = np.logspace(-6, 6, 100)
     Cs = 1 / lambdas
 
@@ -44,6 +63,7 @@ def run_ridge_analysis(plot_top_n=None):
 
     model.fit(X_train_scaled, y_train)
 
+    # Evaluation
     y_test_pred = model.predict(X_test_scaled)
     y_test_proba = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -59,15 +79,20 @@ def run_ridge_analysis(plot_top_n=None):
     train_accuracy = accuracy_score(y_train, y_train_pred)
     train_auc = roc_auc_score(y_train, y_train_proba)
 
+    # Extract Coefficients
     coefficients = model.coef_[0]
     optimal_C = model.C_[0]
     optimal_lambda = 1 / optimal_C
 
-    cv_scores = model.scores_[1].mean(axis=0)
+    cv_scores = model.scores_[model.classes_[1]].mean(axis=0)  # FIXED
     best_cv_score = cv_scores[list(model.Cs_).index(optimal_C)]
 
+    # Marginal Effects
     test_proba_mean = y_test_proba.mean()
     marginal_effects = coefficients * test_proba_mean * (1 - test_proba_mean)
+
+    n_selected = np.sum(coefficients != 0)
+    selected_features = [feature_names[i] for i in range(len(coefficients)) if coefficients[i] != 0]
 
     results = {
         'model': model,
@@ -76,6 +101,8 @@ def run_ridge_analysis(plot_top_n=None):
         'coefficients': coefficients,
         'marginal_effects': marginal_effects,
         'feature_names': feature_names,
+        'n_selected_features': n_selected,
+        'selected_features': selected_features,
         'test_accuracy': test_accuracy,
         'test_precision': test_precision,
         'test_recall': test_recall,
@@ -94,43 +121,49 @@ def run_ridge_analysis(plot_top_n=None):
     }
 
     _create_coefficient_plot(results, paths, plot_top_n)
-    _print_results(results, 'RIDGE')
+
+    output_dir = paths['tables']
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+        # Save Metrics Table (Scalars)
+        metrics_table = {
+            'Optimal Lambda': optimal_lambda,
+            'Test Accuracy': test_accuracy,
+            'Test Precision': test_precision,
+            'Test Recall': test_recall,
+            'Test F1': test_f1,
+            'Test AUC': test_auc,
+            'N Selected': n_selected,
+            'CV Best Score': best_cv_score
+        }
+
+        metrics_path = output_dir + 'ridge_metrics.tex'
+        pd.DataFrame([metrics_table]).to_latex(metrics_path, float_format="%.4f", index=False)
+
+        # Save Coefficients Table (Vectors - only selected features)
+        coef_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Coefficient': coefficients,
+            'Marginal Effect': marginal_effects
+        })
+        # Filter for non-zero coefficients
+        coef_df = coef_df[coef_df['Coefficient'] != 0].sort_values(by='Coefficient', ascending=False)
+
+        coef_path = output_dir + 'ridge_coefficients.tex'
+        coef_df.to_latex(coef_path, float_format="%.4f", index=False)
 
     return results
 
 
-def _print_results(results, method_name):
-    print("\n" + "=" * 60)
-    print(f"{method_name} REGRESSION RESULTS")
-    print("=" * 60)
-    print(f"Optimal λ: {results['optimal_lambda']:.6f}")
-    print(f"Optimal C: {results['optimal_C']:.6f}")
-
-    print("\nTest Set Performance:")
-    print(f"  Accuracy:  {results['test_accuracy']:.4f}")
-    print(f"  Precision: {results['test_precision']:.4f}")
-    print(f"  Recall:    {results['test_recall']:.4f}")
-    print(f"  F1 Score:  {results['test_f1']:.4f}")
-    print(f"  ROC AUC:   {results['test_auc']:.4f}")
-    print(f"  Log Loss:  {results['test_logloss']:.4f}")
-
-    print("\nTrain Set Performance:")
-    print(f"  Accuracy:  {results['train_accuracy']:.4f}")
-    print(f"  ROC AUC:   {results['train_auc']:.4f}")
-
-    print("\nTreatment Effects (Coefficients):")
-    for i, name in enumerate(results['feature_names']):
-        if 'treatment' in name:
-            coef = results['coefficients'][i]
-            me = results['marginal_effects'][i]
-            print(f"  {name:30s}: {coef:8.4f} (ME: {me:7.4f})")
-
-    print("=" * 60)
-
-
 def _create_coefficient_plot(results, paths, plot_top_n=None):
-    coef_paths_all_folds = results['model'].coefs_paths_[1]
+    coef_paths_all_folds = results['model'].coefs_paths_[results['model'].classes_[1]]  # FIXED
+    
     coefficients_path = coef_paths_all_folds.mean(axis=0)
+
+    n_features = len(results['feature_names'])
+    if coefficients_path.shape[1] > n_features:
+        coefficients_path = coefficients_path[:, :n_features]
 
     actual_Cs = results['model'].Cs_
     actual_lambdas = 1 / actual_Cs
@@ -141,7 +174,7 @@ def _create_coefficient_plot(results, paths, plot_top_n=None):
         feature_indices = top_indices
         feature_labels = [results['feature_names'][i] for i in top_indices]
     else:
-        feature_indices = range(len(results['feature_names']))
+        feature_indices = range(n_features)
         feature_labels = results['feature_names']
 
     fig = plt.figure(figsize=(10, 8))
@@ -150,7 +183,7 @@ def _create_coefficient_plot(results, paths, plot_top_n=None):
     colors = plt.cm.tab20(np.linspace(0, 1, len(feature_indices)))
 
     for idx, (i, feature) in enumerate(zip(feature_indices, feature_labels)):
-        if 'treatment' in feature:
+        if 'treatment' in feature or 'intensity' in feature:
             label = feature.replace('treatment_', '').title()
             linewidth = 2.5
             alpha = 1.0
@@ -168,13 +201,30 @@ def _create_coefficient_plot(results, paths, plot_top_n=None):
     ax.set_xlabel('$-\\log(\\lambda)$', fontsize=14)
     ax.set_ylabel('Standardized Coefficients', fontsize=14)
     ax.set_title('Ridge Regression: Coefficient Paths', fontsize=16, fontweight='bold')
-    ax.legend(loc='upper left', fontsize=9, framealpha=0.95)
+    
+    if len(feature_indices) > 10:
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=9, framealpha=0.95)
+    else:
+        ax.legend(loc='upper left', fontsize=9, framealpha=0.95)
+        
     ax.grid(True, alpha=0.3)
 
     max_abs_coef = np.abs(coefficients_path[:, feature_indices]).max()
     ax.set_ylim([-max_abs_coef * 1.2, max_abs_coef * 1.2])
-    ax.set_xlim([np.log(actual_lambdas).min(), np.log(actual_lambdas).max()])
+    ax.set_xlim([-np.log(actual_lambdas).max(), -np.log(actual_lambdas).min()])  # FIXED
 
     plt.tight_layout()
-    plt.savefig(paths['plots'] + 'figure4b.png', dpi=600, bbox_inches='tight')
+
+    output_dir = paths['plots']
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'figure3b.png'
+
+    plt.savefig(output_path, dpi=600, bbox_inches='tight')
     plt.close()
+    return
+
+
+if __name__ == "__main__":
+    run_ridge_analysis(plot_top_n=10)
