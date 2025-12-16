@@ -1,3 +1,6 @@
+# run all ML methods - trees, forests, bagging, boosting
+import os
+
 from sklearn.tree import DecisionTreeClassifier as DTC, plot_tree
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, log_loss, precision_score, recall_score, f1_score, roc_auc_score
@@ -20,15 +23,30 @@ def _build_intensity_vars(data):
         )
         cluster_stats["treatment_intensity"] = 1.0 - cluster_stats["pct_control"]
         median_intensity = cluster_stats["treatment_intensity"].median()
+
         data = data.merge(
             cluster_stats[["cluster", "treatment_intensity", "cluster_size"]],
             on="cluster",
             how="left",
         )
+
         if "treatment_intensity" in data.columns:
+            # Create High Intensity Dummy
             data["high_cluster_intensity"] = (
                     data["treatment_intensity"] >= median_intensity
             ).astype(int)
+
+            # Create Interaction Terms (Treatment * Intensity)
+            target_treatments = [
+                'treatment_civic duty',
+                'treatment_hawthorne',
+                'treatment_neighbors',
+                'treatment_self'
+            ]
+
+            for treat in target_treatments:
+                if treat in data.columns:
+                    data[f"{treat}_x_intensity"] = data[treat] * data["treatment_intensity"]
     return data
 
 
@@ -471,7 +489,11 @@ def run_model_comparison(
         label="tab:model_comparison",
     )
 
-    output_path = paths["tables"] + "table5.tex"
+    output_dir = paths["tables"]
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + "table6.tex"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(latex_table)
 
@@ -489,3 +511,6 @@ def run_model_comparison(
         result["gnn_results"] = gnn_results
 
     return result
+
+if __name__ == "__main__":
+    run_model_comparison()
