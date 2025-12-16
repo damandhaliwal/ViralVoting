@@ -1,10 +1,14 @@
+# clean data and create clusters
+# Daman Dhaliwal
+
+# import libraries
 from utils import get_project_paths
 import pandas as pd
 
-
+# data pipeline - load, create dummies and create clusters
 def clean_data():
     path = get_project_paths()
-    data = pd.read_csv(path['data'] + 'social.csv')
+    data = pd.read_csv(path['data'] + 'social.csv', low_memory=False)
 
     data = data.copy()
 
@@ -16,6 +20,15 @@ def clean_data():
     treatment_dummies = pd.get_dummies(data['treatment'], prefix='treatment')
     treatment_dummies = treatment_dummies.astype(int)
     data = pd.concat([data, treatment_dummies], axis=1)
+
+    treatment_mapping = {
+        'control': 0,
+        'civic duty': 1,
+        'hawthorne': 2,
+        'self': 3,
+        'neighbors': 4
+    }
+    data['treatment_numeric'] = data['treatment'].map(treatment_mapping)
 
     # Create the neighborhood treatment intensity variable
     cluster_variable = 'block'
