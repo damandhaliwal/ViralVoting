@@ -1,174 +1,141 @@
+# create summary statistics and basic correlation for data description section
+# Daman Dhaliwal
+
+# import libraries
 from data_clean import clean_data
 from utils import get_project_paths
 import pandas as pd
-import matplotlib.pyplot as plt
+import os
 
 # print summary statistics of the data with a few variables
-def summary_statistics():
-
+def summary_stats():
     data = clean_data()
+    data['age'] = 2006 - data['yob']
 
-    # Select relevant columns for summary statistics
-    summary_cols = ['sex', 'yob', 'p2004', 'voted', 'treatment_control', 'treatment_self', 'treatment_civic duty', 'treatment_neighbors', 'treatment_hawthorne']
-    summary_data = data[summary_cols]
+    stats_list = []
+    # for each treatment let's calculate the proportion of gender, age, previous voting history, household income
+    for treatment in data['treatment'].unique():
+        subset = data[data['treatment'] == treatment]
 
-    # Rename columns to be cleaner (NO underscores for LaTeX)
-    summary_data = summary_data.rename(columns={
-        'treatment_control': 'Control',
-        'treatment_self': 'Self',
-        'treatment_civic duty': 'Civic Duty',
-        'treatment_neighbors': 'Neighbors',
-        'treatment_hawthorne': 'Hawthorne',
-        'yob': 'Year of Birth',
-        'p2004': 'Voted in 2004 Primary Elections',
-    })
+        stats = {
+            'Treatment': treatment.title(),
+            'N': len(subset),
+            'Female': subset['sex'].mean(),
+            'Avg Age': subset['age'].mean(),
+            'Voted 2004 Prop': subset['p2004'].mean(),
+            'Avg HH Income': subset['median_income'].mean(),
+            'Outcome': subset['voted'].mean()
+        }
+        stats_list.append(stats)
 
-    basic_stats = summary_data.describe(include='all')
-    
-    # Remove quartile rows (25%, 50%, 75%)
-    rows_to_drop = ['25%', '50%', '75%']
-    basic_stats = basic_stats.drop(index=rows_to_drop, errors='ignore')
-    
-    # Add counts of 0s and 1s for binary variables
-    binary_cols = ['sex', 'voted', 'Control', 'Self', 'Civic Duty', 'Neighbors', 'Hawthorne',
-                   'Voted in 2004 Primary Elections']
-    
-    # Add count_0 and count_1 rows
-    count_0 = pd.Series(index=basic_stats.columns)
-    count_1 = pd.Series(index=basic_stats.columns)
-    
-    for col in binary_cols:
-        if col in summary_data.columns:
-            count_0[col] = (summary_data[col] == 0).sum()
-            count_1[col] = (summary_data[col] == 1).sum()
-    
-    # Add the new rows to the summary statistics
-    basic_stats.loc['Zeros'] = count_0
-    basic_stats.loc['Ones'] = count_1
-    
-    latex_output = basic_stats.to_latex(
-        escape=False,
-        column_format='l' + 'r' * len(basic_stats.columns),
-        na_rep='-',
-        float_format='%.2f'
+    summary_df = pd.DataFrame(stats_list).set_index('Treatment')
+
+    # output to latex as table 1
+    path = get_project_paths()
+    output_dir = path['tables']
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'table1.tex'
+
+    summary_df.to_latex(
+        output_path,
+        float_format="%.3f"
     )
+    return
 
-    # Remove outer table environment & caption
-    latex_output = latex_output.replace('\\begin{table}', '')
-    latex_output = latex_output.replace('\\end{table}', '')
-    latex_output = latex_output.replace('\\caption{}', '')
-    latex_output = latex_output.replace('\\label{}', '')
-
-    paths = get_project_paths()
-    with open(paths['tables'] + 'table1.tex', 'w') as f:
-        f.write(latex_output)
-
-
-def treatment_covariate_balance_table(reference_year: int = 2004):
-    data = clean_data().copy()
-    paths = get_project_paths()
-
-    data['age_years'] = reference_year - data['yob']
-
-    group_map = {
-        'Control': 'treatment_control',
-        'Civic Duty': 'treatment_civic duty',
-        'Hawthorne': 'treatment_hawthorne',
-        'Self': 'treatment_self',
-        'Neighbors': 'treatment_neighbors',
-    }
-
-    variable_map = {
-        'Household size': 'hh_size',
-        'Nov 2002': 'g2002',
-        'Nov 2000': 'g2000',
-        'Aug 2004': 'p2004',
-        'Aug 2002': 'p2002',
-        'Aug 2000': 'p2000',
-        'Female': 'sex',
-        'Age (in years)': 'age_years',
-    }
-
-    group_frames = {
-        group: data[data[indicator] == 1].copy()
-        for group, indicator in group_map.items()
-    }
-
-    summary_data = pd.DataFrame(
-        {
-            group: [group_frames[group][column].mean() for column in variable_map.values()]
-            for group in group_map
-        },
-        index=list(variable_map.keys()),
-    )
-
-    sample_sizes = {group: len(frame) for group, frame in group_frames.items()}
-
-    def _format_mean(value: float) -> str:
-        if pd.isna(value):
-            return ''
-        formatted = f'{value:.2f}'
-        if abs(value) < 1:
-            formatted = formatted.lstrip('0')
-        return formatted
-
-    lines = []
-    lines.append('\\begin{table}[H]')
-    lines.append('\\centering')
-    lines.append('\\caption{Relationship between Treatment Group Assignment and Covariates (Household-Level Data)}')
-    lines.append('\\label{tab:household_balance}')
-    lines.append('\\begin{tabular}{l' + 'c' * len(group_map) + '}')
-    lines.append('\\toprule')
-    lines.append(' & ' + ' & '.join(group_map.keys()) + ' \\\\')
-    lines.append('\\midrule')
-    lines.append(' & ' + ' & '.join(['Mean'] * len(group_map)) + ' \\\\')
-    lines.append('\\midrule')
-
-    for row_label in variable_map.keys():
-        row_values = [_format_mean(summary_data.loc[row_label, group]) for group in group_map]
-        lines.append(f'{row_label} & ' + ' & '.join(row_values) + ' \\\\')
-
-    lines.append('\\midrule')
-    n_values = [f"{sample_sizes[group]:,}" for group in group_map]
-    lines.append('$N$ = & ' + ' & '.join(n_values) + ' \\\\')
-    lines.append('\\bottomrule')
-    lines.append('\\end{tabular}')
-    lines.append('\\\\')
-    lines.append('\\begin{minipage}{0.95\\textwidth}')
-    lines.append('\\end{minipage}')
-    lines.append('\\end{table}')
-    
-    latex_table = '\n'.join(lines)
-    output_path = paths['tables'] + 'table2.tex'
-    with open(output_path, 'w') as handle:
-        handle.write(latex_table)
-
-
-def create_spillover_intensity_plot():
+# negative correlation/guilt analysis
+def guilt_analysis():
     data = clean_data()
     paths = get_project_paths()
 
-    control_only = data[data['treatment_control'] == 1].copy()
-    control_only = control_only.dropna(subset=['voted', 'treatment_intensity'])
+    grouped = data.groupby(['treatment', 'p2004'])['voted'].mean().unstack()
 
-    if len(control_only) > 0:
-        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    grouped.columns = ['No Vote 2004', 'Vote 2004']
 
-        control_only['intensity_bin'] = pd.cut(control_only['treatment_intensity'], bins=10)
-        intensity_voting = control_only.groupby('intensity_bin', observed=True)['voted'].mean()
+    order = ['control', 'civic duty', 'hawthorne', 'self', 'neighbors']
+    grouped = grouped.reindex(order)
+    grouped.index = grouped.index.str.title()
 
-        bin_centers = [interval.mid for interval in intensity_voting.index]
-        ax.plot(bin_centers, intensity_voting.values, marker='o', linewidth=2, markersize=8)
-        ax.set_xlabel('Treatment Intensity in Cluster')
-        ax.set_ylabel('Voting Rate (Control Group Only)')
-        ax.set_title('Spillover Effect: Control Group Voting by Neighborhood Treatment Intensity')
-        ax.grid(True, alpha=0.3)
-        plt.tight_layout()
+    control_no_vote = grouped.loc['Control', 'No Vote 2004']
+    control_vote = grouped.loc['Control', 'Vote 2004']
 
-        output_path = paths['plots'] + 'spillover_by_intensity.png'
-        plt.savefig(output_path, dpi=600, bbox_inches='tight')
-        plt.close()
+    grouped['Lift Non Voters'] = grouped['No Vote 2004'] - control_no_vote
+    grouped['Lift Voters'] = grouped['Vote 2004'] - control_vote
 
-        return output_path
+    output_dir = paths['tables']
 
-    return None
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'table2.tex'
+
+    grouped.to_latex(
+        output_path,
+        float_format="%.3f"
+    )
+    return
+
+def balance_table():
+    data = clean_data()
+    paths = get_project_paths()
+
+    data['Age (in years)'] = 2006 - data['yob']
+
+    data['Household Size'] = data.groupby('hh_id')['hh_id'].transform('count')
+
+    var_map = {
+        'g2002': 'Nov 2002',
+        'g2000': 'Nov 2000',
+        'p2004': 'Aug 2004',
+        'p2002': 'Aug 2002',
+        'p2000': 'Aug 2000',
+        'sex': 'Female'  # We will check if this needs 1/0 conversion
+    }
+
+    cols_to_check = ['g2002', 'g2000', 'p2002', 'p2000']
+    for col in cols_to_check:
+        if col in data.columns and data[col].dtype == 'object':
+            data[col] = data[col].map({'yes': 1, 'no': 0})
+
+    data = data.rename(columns=var_map)
+
+    covariates = [
+        'Household Size',
+        'Nov 2002',
+        'Nov 2000',
+        'Aug 2004',
+        'Aug 2002',
+        'Aug 2000',
+        'Female',
+        'Age (in years)'
+    ]
+
+    balance_df = data.groupby('treatment')[covariates].mean().T
+    n_counts = data['treatment'].value_counts()
+
+    balance_df.loc['N'] = n_counts
+
+    cols_order = ['control', 'civic duty', 'hawthorne', 'self', 'neighbors']
+    balance_df = balance_df[cols_order]
+
+    # Capitalize Column Headers
+    balance_df.columns = [c.title() for c in balance_df.columns]
+
+    output_dir = paths['tables']
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + 'table3.tex'
+
+    balance_df.to_latex(
+        output_path,
+        float_format="%.2f"
+    )
+    return
+
+if __name__ == "__main__":
+    summary_stats()
+    guilt_analysis()
+    balance_table()
