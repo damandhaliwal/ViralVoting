@@ -1,3 +1,8 @@
+# ols method with interaction terms
+# Daman Dhaliwal
+import os
+
+# import libraries
 from data_clean import clean_data
 from utils import get_project_paths, get_clean_variable_names
 import statsmodels.api as sm
@@ -5,13 +10,14 @@ from statsmodels.iolib.summary2 import summary_col
 
 
 def run_ols_regression(
+        data = None,
         outcome='voted',
         treatment_vars=None,
         control_vars=None,
         cluster_var=None
 ):
-    # Get cleaned data
-    data = clean_data()
+    if data is None:
+        data = clean_data()
 
     y = data[outcome]
 
@@ -44,7 +50,7 @@ def run_ols_regression(
 def generate_regression_table(
         models,
         model_names=None,
-        filename='regression_table.tex',
+        filename='table4.tex',
         title='Regression Results',
         stars=True
 ):
@@ -57,8 +63,6 @@ def generate_regression_table(
     # Get clean variable names
     name_map = get_clean_variable_names()
 
-    # Generate summary table with summary_col
-    # Don't add R-squared to info_dict since it's already included by default
     latex_table = summary_col(
         models,
         stars=stars,
@@ -85,10 +89,72 @@ def generate_regression_table(
         latex_table = latex_table.replace('R-squared', '\\midrule\nR-squared', 1)
 
     # Save to file
-    output_path = paths['tables'] + filename
+    output_dir = paths['tables']
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = output_dir + filename
     with open(output_path, 'w') as f:
         f.write(latex_table)
 
-    print(f"Regression table saved to {output_path}")
-
     return latex_table
+
+
+def ols_analysis():
+    df = clean_data()
+
+    outcome = 'voted'
+    treatments = ['treatment_civic duty', 'treatment_hawthorne', 'treatment_neighbors', 'treatment_self']
+    controls = ['sex', 'yob', 'p2004']
+
+    cluster_level = 'hh_id'
+
+    interaction_vars = []
+    for treat in treatments:
+        inter_name = f'{treat}_x_intensity'
+        df[inter_name] = df[treat] * df['treatment_intensity']
+        interaction_vars.append(inter_name)
+
+    # Model 1: Baseline + Controls (Eq 2)
+    model_baseline = run_ols_regression(
+        data=df,
+        outcome=outcome,
+        treatment_vars=treatments,
+        control_vars=controls,
+        cluster_var=cluster_level
+    )
+
+    # Model 2: Diffusion (Eq 3)
+    model_diffusion = run_ols_regression(
+        data=df,
+        outcome=outcome,
+        treatment_vars=treatments + ['treatment_intensity'],
+        control_vars=controls,
+        cluster_var=cluster_level
+    )
+
+    # Model 3: Interaction (The "Substitutability" Test)
+    model_interaction = run_ols_regression(
+        data=df,
+        outcome=outcome,
+        treatment_vars=treatments + ['treatment_intensity'] + interaction_vars,
+        control_vars=controls,
+        cluster_var=cluster_level
+    )
+
+    dynamic_filename = f'table4_{cluster_level}.tex'
+
+    generate_regression_table(
+        models=[model_baseline, model_diffusion, model_interaction],
+        model_names=['Baseline', 'Diffusion', 'Interaction'],
+        filename=dynamic_filename,
+        title=f'OLS Estimates (Clustered by {cluster_level})'
+    )
+
+    print(f"Saved results to: {dynamic_filename}")
+
+    return
+
+if __name__ == "__main__":
+    ols_analysis()
