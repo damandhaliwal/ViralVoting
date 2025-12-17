@@ -255,7 +255,7 @@ However, upon adding interaction terms with each of the treatment variables, we 
 
 Returning to our structural framework, we seek to recover the transmission rate $\lambda = \beta_2 / \beta_1$ and calculate its standard error using the Delta Method approximation. However, the estimation proves to be structurally unstable from the observed parameters.
 
-For the Civic Duty, Self and Neighbors treatments, the estimates of $\beta_2$ are statistically indistinguishable from zero, implying no diffusion effects. However, for the Hawthorne treatment, while $\beta_2$ is positive and significant, $\beta_1$ becomes statistically insignificant when interaction terms are included. This instability prevents us from reliably estimating $\lambda$ for any treatment group.
+For the Civic Duty, Self and Neighbors treatments, the estimates of $\beta_2$, the coefficient of the interaction term, are statistically indistinguishable from zero, implying no diffusion effects. However, for the Hawthorne treatment, while $\beta_2$ is positive and significant, $\beta_1$, the coefficient for the treatment directly, becomes statistically insignificant when interaction terms are included. This instability prevents us from reliably estimating $\lambda$ for any treatment group.
 
 Therefore, we conclude that the linear structural approximation is insufficient to capture the Hawthorne dynamic, where the effect is estimated to be entirely driven by social interaction rather than direct exposure. This motivates our use of non-linear machine learning methods in the following sections.
 \pagebreak
@@ -288,15 +288,16 @@ Where $X_i$ is a vector of covariates that includes sex, year of birth, previous
 Both LASSO and Ridge regression arrived at consistent coefficient estimates. The Neighbors treatment has the most effect with a LASSO coefficient of 0.1055, followed by Self (0.0734) and Civic Duty (0.0220). Consistent with the OLS, the coefficient of the Hawthorne treatment was reduced to 0 and the effect was entirely captured by the interaction term (0.0420). The coefficient of the neighborhood intensity is negative (-0.0183) and consistent. 
 
 Furthermore, the regularization explicitly selected interaction terms, revealing heterogeneity in diffusion: the interaction between Hawthorne and Intensity is the strongest (0.0420), followed by Neighbors (0.0183) and Civic Duty (0.0063). In contrast, the interaction for the Self treatment is effectively zero (-0.0005), suggesting that intrinsic motivation does not benefit from social reinforcement in the same way as external pressure. The LASSO and Ridge regression coefficient paths are plotted below:\begin{figure}[H]
+   \vspace{-0.5cm}
     \centering
-    \begin{minipage}[t]{0.48\textwidth}
+    \begin{minipage}[t]{0.7\textwidth}
         \centering
         \includegraphics[width=\linewidth]{../../Output/Plots/figure3a.png}
         \vspace{0.3em}
         {\small LASSO coefficient path}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.48\textwidth}
+    \begin{minipage}[t]{0.7\textwidth}
         \centering
         \includegraphics[width=\linewidth]{../../Output/Plots/figure3b.png}
         \vspace{0.3em}
@@ -305,7 +306,7 @@ Furthermore, the regularization explicitly selected interaction terms, revealing
     \caption{Regularization coefficient paths: LASSO (left) and Ridge (right)}
     \label{fig:coef_paths}
 \end{figure}
-
+\vspace{-0.5cm}
 \subsection{Machine Learning Methods}
 \subsubsection{Regression Trees and Random Forests}
 The results from the random tree are presented on the next page:
@@ -427,7 +428,7 @@ The only exception is the self-treatment which shows household members their own
 
     The results from both the non-linear Double ML models indicate that the treatment effects on voter turnout are consistent across different modeling approaches. The estimates closely match those reported in the original study, suggesting robustness in the findings. The treatment intensity is also robust and aligns with the findings from the meta learners and the Doubly Robust estimator. This consistency across models strengthens the validity of the conclusions drawn regarding the impact of social pressure treatments on voter turnout.
 
-    A cumulative gain plot showing heterogeneity in treatment effects is presented in the appendix. The plot shows that the Civic Duty and Hawthorne treatments exhibit most heterogeneity, as indicated by the steeper cumulative gain curves. This implies that these treatments have varying effects on different subpopulations, potentially influenced by factors such as demo- graphics or prior voting behavior.
+    A cumulative gain plot showing heterogeneity in treatment effects is presented in the appendix. The plot shows that the Civic Duty and Hawthorne treatments exhibit most heterogeneity, as indicated by the steeper cumulative gain curves. This implies that these treatments have varying effects on different subpopulations, potentially influenced by factors such as demographics or prior voting behavior.
 
 
 \subsubsection{Results Discussion}
@@ -456,7 +457,9 @@ Second, regarding the transmission rate $\lambda$, we reject our initial hypothe
 
 Third, we identify a crucial exception that validates the structural importance of social context. The Hawthorne treatment is almost entirely driven by the interaction term, implying a high positive indirect effect on the neighbors. Conversely, for the neighbors treatment, there is an inverted u shaped pattern discovered by machine learning estimates. The effect is higher at moderate intensities but lowers at low and high intensities. This highlights that social pressure acts as a contagion only up to a saturation point, beyond which free riding takes over.
 
-These findings have important implications for understanding how social pressure campaigns function. They suggest that while direct appeals can effectively mobilize voters, simply saturating a neighborhood with treatment may not yield additional benefits and could even backfire due to free-riding dynamics. Future campaigns should consider targeting moderate intensity levels to optimize turnout effects.
+The deployment of Causal Machine Learning methods (specifically X-Learners and Causal Forests) was instrumental in revealing the hidden non-linear structure of the diffusion process that traditional linear models could not capture. At low levels of neighborhodod treatment intensity, social pressure fails to establish strong norms, moderate intensity is revealed as optimal where community creates positive reinforcement without being overbearing. High intensity neighborhoods suggested a social saturation effect and a decline in the effect of the pressure treatment.
+
+These findings have important implications for understanding how social pressure campaigns function. They suggest that while direct appeals can effectively mobilize voters, simply saturating a neighborhood with treatment may not yield additional benefits and could even backfire due to free-riding dynamics. Future campaigns should consider targeting moderate intensity levels to optimize turnout effects, creating clusters of social pressure large enough to spark conversation but small enough to avoid triggering community fatigue.
 \section{Future Steps}
 We can explore other models and supplementary data to further validate our findings. Analysis of similar field experiments with clearly identifiable social networks can help corroborate our results. Additional extensions can include exploring social media data (such as X (formerly Twitter)) to see how information diffusion effects spread in the modern age where spatial proximity is less relevant. \cite{chetty_social_2022} created a new measure of economic connectedness, social cohesion and civic engagement using Facebook data. The data is from 2022, however, and may not be directly comparable to the 2006 data used in this study. But it does provide a useful framework for future research on social pressure and information diffusion effects in the digital age.
 \pagebreak
