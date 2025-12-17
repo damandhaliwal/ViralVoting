@@ -19,6 +19,7 @@
 \usepackage{enumitem}
 \usepackage[T1]{fontenc}
 \usepackage{multirow}
+\usepackage{pdflscape}
 
 \setstretch{1.2}
 
@@ -41,7 +42,7 @@
 
     \vspace{0.5cm}
     
-    \Large{\textbf{DRAFT FINAL PROJECT}}
+    \Large{\textbf{FINAL PROJECT}}
     
     \vfill
     
@@ -60,15 +61,15 @@ In order to ensure that representation across government levels is fair and stab
 
 Understanding how social pressure shapes information diffusion reveals to us the dynamics that neither phenomenon produces alone. And these dynamics have now provided some key results across public health, election results, and the spread of both knowledge and misinformation across billions of people. Across disciplines, researchers have found that information simply just does not diffuse through a network like a disease. It creates new societal rules and reshapes the very networks through which it spreads. 
 
-\cite{hong_covid-19_2023} showed how positive social pressure from the public authority led to lower skepticism about the COVID-19 vaccine and increased vaccination rates. However, the study missed the effect of the information transfer among the citizens on the country and how that led to a positive outcome. \cite{bond_61-million-person_2012} found results similar to \cite{gerber_social_2008} where people who received social pressure treatments with familiar faces were 0.39\% more likely to vote than people who received a treatment with a stranger's face. \cite{bond_61-million-person_2012} also found that the social contagion/diffusion effect resulted in an additional 280,000 voters compared to the direct effects of approximately 60,000 voters. This is similar to the research question we are trying to anser in this study. However, we are trying to isolate the diffusion effects of different types of social pressure treatments.
+To study the information diffusion effects of social pressure on voter turnout, we hypothesize that social pressure treatments like the one used by \cite{gerber_social_2008} will have positive diffusion effects on untreated individuals in the same neighborhood. We also hypothesize that the magnitude of these diffusion effects will differ by treatment type, with more intrusive treatments (like the Neighbors treatment) generating stronger diffusion effects compared to less intrusive treatments (like the Civic Duty treatment). We will test these hypotheses using a combination of econometric models and causal machine learning methods to analyze the data from the original field experiment.
+
+\cite{hong_covid-19_2023} showed how positive social pressure from the public authority led to lower skepticism about the COVID-19 vaccine and increased vaccination rates. However, the study missed the effect of the information transfer among the citizens on the country and how that led to a positive outcome. \cite{bond_61-million-person_2012} found results similar to \cite{gerber_social_2008} where people who received social pressure treatments with familiar faces were 0.39\% more likely to vote than people who received a treatment with a stranger's face. \cite{bond_61-million-person_2012} also found that the social contagion/diffusion effect resulted in an additional 280,000 voters compared to the direct effects of approximately 60,000 voters. This is similar to the research question we are trying to answer in this study. However, we are trying to isolate the diffusion effects of different types of social pressure treatments.
 
 \cite{atienza-barthelemy_modeling_2025} created a model to study the diffusion of information through social media. They found that social media allows for rapid dissemination of information but the longevity and the reach of the content is severely limited due to the availability of an overwhelming amount of information on these platforms. Given our data is from a field experiment in 2006, we are unable to study similar metrics, however, this can easily be a future extension of this project.
 
 In a similar project, \cite{vosoughi_spread_2018} studied the spread of true and false news stories on Twitter. They found that false news had deeper and more rapid information diffusion effects. They also discovered that the diffusion effects of false news were human led and not influenced by bots. This is an interesting result and is the motivation behind our research question. We want to isolate which types of social pressure diffuse more effectively to combat misinformation as well as to allow for positive social pressure to be more effective. 
 
 \cite{haenschen_social_2016} studied the effect of pride and shame social pressure treatments on voter turnout and found a treatment effect of 15.8\% to 24.3\%. However, they did not find any signficant effect from indirect social pressure or diffusion. Their empirical strategy was to use a linear probability model with OLS estimation. We will be using a similar empirical strategy but we will extend the empirical work to include spatial autoregressive models and causal machine learning methods to better isolate the diffusion effects.
-
-To study the information diffusion effects of social pressure on voter turnout, we hypothesize that social pressure treatments like the one used by \cite{gerber_social_2008} will have positive diffusion effects on untreated individuals in the same neighborhood. We also hypothesize that the magnitude of these diffusion effects will differ by treatment type, with more intrusive treatments (like the Neighbors treatment) generating stronger diffusion effects compared to less intrusive treatments (like the Civic Duty treatment). We will test these hypotheses using a combination of econometric models and causal machine learning methods to analyze the data from the original field experiment.
 
 The rest of the paper is structured as follows. Section 2 describes the original experiment and the data. Section 3 describes the theoretical framework and the empirical strategy. Section 4 presents the results and section 5 concludes. We do include a future extensions section after the conclusion to discuss how this project can be extended further.
 
@@ -80,7 +81,7 @@ Prior to the random assigment of the treatment, individuals who were more likely
 The remaining 180,002 households were randomly assigned to one of the four treatment groups or the control group. The control group received no mailings. Each household in one of the treatment groups received one of the four mailings 11 days prior to the election. Each mailing included ``DO YOUR CIVIC DUTY - VOTE!" along with a varying degree of social pressure. The four treatment groups were as follows:
 
 The \textbf{Civic Duty} treatment was the least intrusive and included the message: ``Remember your rights and responsibilities as a citizen. Remember to vote." The \textbf{Hawthorne} treatment told households ``YOU ARE BEING STUDIED" and that their voting behaviour was being monitored for research purposes. The \textbf{Self} treatment included a message that informed the household that their voting record was public information and included their public record for the previous elections. Finally, the \textbf{Neighbors} treatment was the most intrusive and included a message that informed the household that their voting record was public information and included their public record for the previous elections. Additionally, it also included the voting records of their neighbours.
-Both the Self and the Neighbors treatments included the face that an updated voting record would be mailed to them after the election.
+Both the Self and the Neighbors treatments included the fact that an updated voting record would be mailed to them after the election.
 
 The outcome variable of interest is whether an individual voted in the August 2006 primary election. The data also collected information from the previous elections in 2000, 2002 and 2004 that was supplemented from the Qualified Voter File. Finally, the data included demographic information such as age, gender and party affiliation couped with census data of the household's neighbourhood.
 
@@ -88,26 +89,21 @@ The outcome variable of interest is whether an individual voted in the August 20
     \centering
     \caption{Summary Statistics}
     \label{tab:summary_stats}
-
-    \begin{adjustbox}{width=\textwidth, center}
-        \input{../../Output/Tables/table1.tex}
-    \end{adjustbox}
+    \input{../../Output/Tables/table1.tex}
 \end{table}
 
-Since the variables are binary, the summary statistics do not offer much insight. However, we can see that the treatment groups are fairly evenly distributed with the control group being slightly larger. The average age of the individuals in the sample is 50 years old. Below is a bar chart showing the outcome variable (voted in 2006 election) based on previous voting history.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{../../Output/Plots/figure1.png}   
-    \caption{Voter Turnout in 2006 Election by Previous Voting History}
-    \label{fig:figure1}
-\end{figure}
+The summary statistics in Table \ref{tab:summary_stats} show that the average age of individuals in the sample is around 50 years old in each treatment group. Furthermore, we can also see that the voting proportion for the 2004 primary elections is almost identical at around 40\%. We can also see that the median income for each group is around \$60,000 overall. The summary statistics show that the randomization was effective and the treatment groups are balanced across key demographic variables.
 
-As expected, individuals who voted in the previous elections were more likely to vote in the 2006 election. However, it is interesting to see that even after excluding everyone who did not vote in the 2004 general elections, there was a signficant portion of individuals who did not vote in the 2004 primary elections but voted in the 2006 primary elections. This shows that there are individuals who are not regular voters but can be mobilized to vote. 
+\begin{table}[H]
+    \centering
+    \caption{Relationship between 2004 and 2006 Voting}
+    \label{tab:voting_history}
+    \input{../../Output/Tables/table2.tex}
+\end{table}
+
+Table \ref{tab:voting_history} shows the relationship between voting in the 2004 primary election and the 2006 primary election. The lift columns show the proportion of individuals who voted in 2006 given their voting history in 2004. We can see that there is a positive correlation and individuals who voted in 2004 are more likely to vote in 2006. This is an important control variable that we will include in our regression models to account for prior voting behaviour.
 
 The data was downloaded from a Stanford GSB \href{https://github.com/gsbDBI/ExperimentData}{repository}. Given the field experiment's thorough design and randomization, we are confident that the data is of high quality and can be used for our analysis. The data was already cleaned and there are no major issues with missing data or outliers.
-
-
-\pagebreak
 
 \section{Theoretical Model \& Empirical Framework}
 To model the information diffusion effects of social pressure on voting, we will borrow a network diffusion model from \cite{myers_information_2012}. The original model is designed to capture the spread of information through a social network. In our case, we will adapt the model to capture it based on geographical proximity. Effects are bound to be different since social media connections allow for rapid and far reaching dissemination of information.
@@ -117,85 +113,52 @@ The original model by \cite{myers_information_2012} has three main components: t
 
 We define \textbf{contagion} as the information about social pressure and the public disclosure of voting behaviour. A household becomes \textbf{infected} when they become aware that (1) voting behavior is being monitored, (2) their voting records may be publicized to neighbors, and (3) voting is subject to social surveillance. This information can spread through both the experimental mailings and through social diffusion within neighborhoods. Note that contagion is only the information itself, while infection is the state of being aware of this information.
 
-An \textbf{internal exposure} occurs when a household learns about the social pressure treatments from their neighbors who received the mailings. This includes both direct social interactions (neighbors discussing the mailings) and indirect observations (seeing neighbors vote, observing physical mailings, or experiencing increased social pressure within the neighborhood). Internal exposures capture all information transmission along the edges of our observed network structure.
+An \textbf{internal exposure $(\sum T_j)$} occurs when a household learns about the social pressure treatments from their neighbors who received the mailings. This includes both direct social interactions (neighbors discussing the mailings) and indirect observations (seeing neighbors vote, observing physical mailings, or experiencing increased social pressure within the neighborhood). Internal exposures capture all information transmission along the edges of our observed network structure.
 
-\textbf{External exposures} represent the instances when information reaches a household from sources outside their immediate neighbor network. This includes the experimental mailings themselves (the primary observed external exposure), as well as unobserved sources such as local media coverage, family members living elsewhere, workplace discussions, and general get-out-the-vote campaigns occurring simultaneously. External exposures represent information 'jumping into' the network from outside.
+\textbf{External exposures $(T_i)$} represent the instances when information reaches a household from sources outside their immediate neighbor network. In our experiment, external exposures correspond to the direct receipt of a social pressure mailing.
 
-\subsection{Model Specification}
-The original model in \cite{myers_information_2012} models the probability of infection at time t as:
-
+\subsection{Model Specification and Linear Approximation}
+We assume that the probability of a household $i$ voting is a function of its infection state. Let $K_i$ denote the total number of exposures household $i$ receives. Mathematically, we can write this as:
 \begin{equation*}
-    F^{(i)}(t) = \sum_{n=1}^{\infty} P[i \text{ has } n \text{ exp. }] \times P[i \text{ inf. } | i \text{ has } n \text{ exp. }]
+    K_i = T_i + \lambda \sum_{j} T_j
 \end{equation*}
-\begin{equation*}
-    = \sum_{n=1}^{\infty} P_{\exp}^{(i)}(n; t) \times \left[ 1 - \prod_{k=1}^{n} [1 - \eta(k)] \right].
-\end{equation*}
-
-Where $P_{\exp}^{(i)}(n; t)$ is the probability that node $i$ has received $n$ exposures by time $t$ and $\eta(k)$ is the probability of infection upon the $k^{th}$ exposure.
-
-Following this framework, we adapt the model to a two-period setting (pre-election and post-election) appropriate for our data stucture. In period 1, households receive external exposures through the experimental mailings. In period 2, the election happens and individuals decide whether to vote based on their accumulated exposures.
-
-In period 1, the number of exposures $e_i$ for household $i$ can be modeled as:
-\begin{equation*}
-    e_i = T_i + \lambda \sum_{j \in N_i} T_j
-\end{equation*}
-where $T_i$ is a binary indicator for whether household $i$ received a mailing (external exposure), $N_i$ is the set of neighbors of household $i$, and $\lambda$ represents the strength of internal exposure from each treated neighbor or the probability that information about social pressure is transmitted from a treated neighbor to household $i$.
-
-Following \cite{myers_information_2012}, we define the probability of infection given $e_i$ exposures as:
-\begin{equation*}
-    P(\text{infected}_i) = 1 - [1 - \eta(k)]^{e_i}
-\end{equation*}
-where $\eta(k)$ is the probability of infection upon the $k^{th}$ exposure. 
-Finally, in period 2, the probability of voting for household $i$ is modeled as:
-\begin{equation*}
-    P(\text{vote}_i = 1) = \alpha + \beta \cdot P(\text{infected}_i) + \varepsilon_i
-\end{equation*}
-where $\alpha$ is the baseline probability of voting, $\beta$ captures the effect of being infected (aware of social pressure) on the probability of voting, and $\varepsilon_i$ is the error term.
-
-Subsituting the infection probability and the exposure equation into the voting probability, we get:
-\begin{equation*}
-    P(\text{vote}_i = 1) = \alpha + \beta \cdot \left[ 1 - [1 - \eta(k)]^{e_i} \right] + \varepsilon_i
-\end{equation*}
-
-Using a first-order Taylor expansion, we get that $(1 - \eta(k))^{e_i} \approx 1 - e_i \cdot \eta(k)$. Substituting this back into the voting probability equation yields:
-
-\begin{equation*}
-    P(\text{vote}_i = 1) \approx \alpha + \beta \cdot (e_i \cdot \eta(k)) + \varepsilon_i
-\end{equation*}
-Using the definition of exposures, we can simplify:
-\begin{equation*}
-    P(\text{vote}_i = 1) \approx \alpha + \beta \cdot \eta(k) \cdot T_i + \beta \cdot \lambda \cdot \eta(k) \cdot \sum_{j \in N_i} T_j + \varepsilon_i
-\end{equation*}
-This gives us the final model specification:
-\begin{equation*}
-    P(\text{vote}_i = 1) \approx \alpha + \beta_1 \cdot T_i + \beta_2 \cdot \sum_{j \in N_i} T_j + \varepsilon_i
-\end{equation*}
-
-where $\beta_1 = \beta \cdot \eta(k)$ captures the direct effect of receiving a social pressure mailing on the probability of voting (external exposure) and $\beta_2 = \beta \cdot \lambda \cdot \eta(k)$ captures the diffusion effect from having more neighbors treated (internal exposure).
-
-
-\subsubsection{Linear Model}
-For empirical estimation, we replicate the findings of \cite{gerber_social_2008} with our incorporated diffusion effects as modelled above. 
-
-A reduced form specification of the model is preferred over simultaneous equations estimation because we cannot measure the internal exposures and infections states directly. The reduced form allows us to estimate the overall effect of treatment and neighbor treatment on voting without needing to separately identify the internal exposure and infection processes.
-
-To control for potential confounders, we include individual characteristics and block fixed effects in the regression. Block fixed effects control for unobserved neighborhood-level factors that may influence voting behavior, such as socioeconomic status or local political climate. We also add an interaction term between treatment and neighbors treated to capture any heterogeneous diffusion effects based on treatment status. We estimate the following linear probability model using OLS:
-\begin{equation*}
-    P(\text{vote}_i = 1) = \alpha + \beta_1 \cdot T_i + \beta_2 \cdot S_i + \beta_3 \cdot (T_i \times S_i)+ \gamma X_i + \alpha_{\text{block}} + \varepsilon_i
-\end{equation*}
-where:
+Where:
 \begin{itemize}[noitemsep]
-    \item $T_i$ is a binary indicator for whether household $i$ received a mailing (captures external exposure)
-    \item $S_i$ is the proportion of $i$'s neighbors who received mailings (captures internal exposure)
-    \item $X_i$ is a vector of individual characteristics (age, sex, past voting history)
-    \item $\alpha_{\text{block}}$ are block fixed effects (control for neighborhood-level confounders)
-    \item $\varepsilon_i$ is the error term (clustered at household level, the unit of randomization)
+    \item $T_i \in \{0,1\}$ indicates if household $i$ received a social pressure mailing (external exposure).
+    \item $\sum_{j} T_j$ is the count of treated neighbors of household $i$.
+    \item $\lambda \geq 0$ is the transmission rate that captures how much of a neighbor's treatment effect spills over to household $i$ (internal exposure).
 \end{itemize}
 
+The probability that household becomes infected (i.e., votes) after receiving $K_i$ exposures is given by the probability that at least one exposure leads to infection. In \cite{myers_information_2012}, this is modelled non-linearly as:
+\begin{equation*}
+    P(Infected_i | K_i) = 1 - (1 - \eta)^{K_i}
+\end{equation*}
+where $\eta$ is the probability that a single exposure leads to infection.
 
-The key parameters of interest are $\beta_1$, $\beta_2$, and $\beta_3$. $\beta_1$ captures the direct effect of receiving a social pressure mailing on the probability of voting (the external exposure), while $\beta_2$ captures the diffusion effect from having more neighbors treated (the internal exposure). A positive and significant $\beta_2$ would indicate that information about social pressure diffuses through neighborhood interactions, increasing voter turnout even among untreated households. We can isolate the parameter $\lambda$ from the previous section as $\lambda = \frac{\beta_2}{\beta_1}$, this can interpreted as the strength of internal exposure from each treated neighbor.
+\subsubsection{Linear Model}
+Directly estimating $\eta$ is challenging because information diffusion is unobserved. To allow for estimation using observed data, we linearize the model using a first-order Taylor expansion around $K_i = 0$. This yields:
+\begin{equation*}
+    P(Infected_i | K_i) \approx \eta K_i = \eta (T_i + \lambda \sum_{j} T_j)
+\end{equation*}
 
-\pagebreak
+The key assumption here is that the probability of infection increases linearly with the number of exposures. Given that we use a Zip+4 based neighborhood definition, we expect most households to have a small number of treated neighbors, making the linear approximation reasonable.
+
+Under this linear model, the probability that household $i$ votes can be expressed as:
+\begin{equation}
+    P(Vote_i) = \alpha + P(Infected_i | K_i) + \epsilon_i = \alpha + \eta T_i + \eta \lambda \sum_{j} T_j + \epsilon_i
+\end{equation}
+
+This parameterization allows us to estimate the direct effect of receiving a social pressure mailing ($\eta$) and the diffusion effect from having more neighbors treated ($\eta \lambda$) using econometric methods.
+
+We can estimate the reduced form of the model using OLS regression as follows:
+\begin{equation}
+    Vote_i = \alpha + \beta_1 T_i + \beta_2 \sum_{j} T_j + \epsilon_i
+\end{equation}
+
+The structural parameters of interest can be recovered as $\eta = \beta_1$ and $\lambda = \beta_2 / \beta_1$.
+
+A key limitation of this linear approximation is that it does not capture non-linearities in the diffusion process such decrease in $\eta$ as more exposures are received. We assume that the machine learning methods employed later will help capture some of these non-linearities.
+
 \section{Empirical Results}
 \subsection{Identification Strategy}
 In the original study by \cite{gerber_social_2008}, the authors used a randomized controlled trial (RCT) design to identify the causal effects of different social pressure treatments on voter turnout. The experiment and the randomization process have already been described in Section 2. 
@@ -213,7 +176,8 @@ Where $Y_i(t, n)$ is the potential outcome for household $i$ when they receive t
 \begin{equation*}
     P(\text{vote} | T_i, S_i, X_i) = P(\text{vote} | \text{do}(T_i), S_i, X_i)
 \end{equation*}
-
+We assume that due to randomization, the treatment assignment is independent of any unobserved confounders that may affect voter turnout. The unexplained portion of the outcome variable is captured in the error term $\epsilon_i$ which is assumed to be orthogonal to the treatment variables.
+\pagebreak
 \subsection{Directed Acyclic Graphs}
 Here's a DAG to illustrate the relationships between the variables in our study:
 \begin{figure}[H]
@@ -222,23 +186,30 @@ Here's a DAG to illustrate the relationships between the variables in our study:
     \caption{Directed Acyclic Graph (DAG)}
     \label{fig:dag}
 \end{figure}
-In this DAG, the treatment groups (Civic Duty, Hawthorne, Self, Neighbors) directly influence the outcome variable (Voted in 2006). The control variables as well geographic proximity. (clustering) affects the information sharing node which affects the outcome variable for the control group. Simpler DAGs can be found in the appanedix.
+In this DAG, the treatment groups (Civic Duty, Hawthorne, Self, Neighbors) directly influence the outcome variable (Voted in 2006). The control variables as well geographic proximity. (clustering) affects the information sharing node which affects the outcome variable for the control group.
 
 \subsection{Identification Assumptions}
 The identification strategy relies on the assumption that the treatment assignment is random and uncorrelated with the error term. Given the randomization in the original experiment, this assumption is likely to hold. The balance table below shows the average characteristics of individuals across the treatment groups and the control group. For brevity, we only show a subset of the variables:
-\input{../../Output/Tables/table2.tex}
+
+\begin{table}[H]
+    \centering
+    \caption{Balance Table}
+    \label{tab:balance_table}
+    \input{../../Output/Tables/table3.tex}
+\end{table}
+
 
 This shows that the randomization was effective. However, there may be some concerns about spillover effects from the Neighbors treatment to the control group. 
 
 To estimate the effect of these diffusion effects, consider the following plot showing the voter turnout in the control group against the neighbourhood treatment intensity:
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{../../Output/Plots/spillover_by_intensity.png}   
+    \includegraphics[width=0.9\textwidth]{../../Output/Plots/figure_2.png}   
     \caption{Voter Turnout in Control Group by Neighbourhood Treatment Intensity}
     \label{fig:figure2}
 \end{figure}
 
-Voter turnout in the control group is pretty flat with respect to the neighbourhood treatment intensity but drops off at the higher end steeply. This can be accounted for by the randomization process which prevented any neighborhoods having a high intensity of treated individuals. This suggests that there are probably no major diffusion effects from the treatments to the control group. However, to be sure, we will include block fixed effects in our regression models to control for any unobserved neighbourhood-level confounders. This assumption will be furter tested by the spatial autoregressive model and the Graphical Neural Network model.
+Voter turnout in the control group is pretty flat with respect to the neighbourhood treatment intensity but drops off at the higher end steeply. This can be accounted for by the randomization process which prevented any neighborhoods having a high intensity of treated individuals. This suggests that there are probably no major diffusion effects from the treatments to the control group and that $\lambda$ is probably small or zero and that $\eta$ should be the main driver of the voter turnout. Given the linear approximation of the reduced form, we expect that there be a bias towards zero in the estimate of $\beta_2$.
 
 \subsection{OLS}
 To estimate the direct effects of the different social pressure treatments on voter turnout, we will explore all the widely used econometric methods in the literature. We will start with a simple OLS regression of the form:
@@ -268,7 +239,7 @@ Results from all three regression models are presented in Table 2.
     \centering
     \caption{OLS Regression Results with Diffusion Effects}
     \vspace{-0.3cm}
-    \input{../../Output/Tables/table3_hh_id.tex}
+    \input{../../Output/Tables/table4_hh_id.tex}
     \label{tab:ols_diffusion}
 \end{table}
 
@@ -276,15 +247,18 @@ As a robustness check, we also estimated the models with the data clustered at t
 
 \vspace{-0.5cm}
 \subsubsection{Results Discussion}
-The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by approximately 8.02 to 8.13 percentage points. The Self treatment increases the probability of voting by 4.8 percentage points, the Hawthorne treatment by 2.5 percentage points and the Civic Duty treatment by 1.7 to 1.8 percentage points. 
+The OLS results are consistent with the findings of \cite{gerber_social_2008}. All the treatment groups have a positive and statistically significant effect on voter turnout compared to the control group. The Neighbors treatment has the largest effect, increasing the probability of voting by approximately 6.77 to 8.03 percentage points. The Self treatment increases the probability of voting by 4.8 to 5.8 percentage points, the Hawthorne treatment by 2.5 percentage points and the Civic Duty treatment by 1.8 percentage points. 
 
 There is also a very signficant positive effect of having voted in the 2004 primary election, increasing the probability of voting by 14.82 percentage points. Age and gender are statistically significant but the effects are very small. The treatment intensity of the neighborhood has a negative and statistically significant effect on voter turnout. This suggests that there are no positive diffusion effects from the treatments to the control group. In fact, it seems that having more treated neighbors slightly decreases the probability of voting. This could be due to free-riding behaviour where individuals rely on their neighbors to vote instead of voting themselves.
 
-However, upon adding interaction terms with each of the treatment variables, we observe that the civic duty and hawthorn treatments no longer have a statistically significant effect on voter turnout. We also observe that the interaction term for the Hawthorne treatment is positive and statistically significant. This suggests that the Hawthorne treatment has positive diffusion effects, where having more treated neighbors increases the probability of voting for treated individuals. The interaction terms for the Self and Neighbors treatments are negative but not statistically significant. This suggests that there are no diffusion effects for these treatments.
+However, upon adding interaction terms with each of the treatment variables, we observe that the civic duty and hawthorn treatments no longer have a statistically significant effect on voter turnout. We also observe that the interaction term for the Hawthorne treatment is positive at 6.77 percentage points and statistically significant. This suggests that the Hawthorne treatment has very large and positive diffusion effects, where having more treated neighbors increases the probability of voting for treated individuals. The interaction terms for the Self, Civic Duty and Neighbors treatments are not statistically significant. This suggests that there are no diffusion effects for these treatments.
 
-Returning to our theoretical framework, we can recover the transmission rate $\lambda = \beta_2 / \beta_1$, which captures how much of a neighbor's treatment effect spills over. Using our OLS estimates, the implied transmission rate is approximately -0.39. The negative value indicates that neighborhood treatment exposure decreases rather than amplifying individual effects, contradicting standard information diffusion models and suggesting that voter mobilization mechanisms differ fundamentally from disease contagion or social media diffusion.
+Returning to our structural framework, we seek to recover the transmission rate $\lambda = \beta_2 / \beta_1$ and calculate its standard error using the Delta Method approximation. However, the estimation proves to be structurally unstable from the observed parameters.
 
+For the Civic Duty, Self and Neighbors treatments, the estimates of $\beta_2$ are statistically indistinguishable from zero, implying no diffusion effects. However, for the Hawthorne treatment, while $\beta_2$ is positive and significant, $\beta_1$ becomes statistically insignificant when interaction terms are included. This instability prevents us from reliably estimating $\lambda$ for any treatment group.
 
+Therefore, we conclude that the linear structural approximation is insufficient to capture the Hawthorne dynamic, where the effect is estimated to be entirely driven by social interaction rather than direct exposure. This motivates our use of non-linear machine learning methods in the following sections.
+\pagebreak
 \subsection{Spatial Autoregressive Model}
 To further check for robustness of the lack of diffusion effects and to account for potential spatial correlation in the error terms, we will use a spatial autorgressive model (SAR) (\cite{lord_chapter_2021}). The SAR model can be specified as:
 \begin{equation}
@@ -293,9 +267,13 @@ y_i = \rho \sum_{j=1}^{N} w_{ij} y_j + X_i \beta + \epsilon_i
 The spatial weights matrix $W$ is constructed using a K-Nearest Neighbors (KNN) algorithm based on geographical coordinates derived from zip codes. Specifically, for every individual $i$, we assign a weight of $w_{ij} > 0$ to the $k=8$ spatially closest neighbors based on Euclidean distance, and $w_{ij} = 0$ otherwise. The weights matrix is row-standardized such that $\sum_{j} w_{ij} = 1$, ensuring that the spatial lag term represents the average outcome of an individual's neighbors.
 
 $y_i$ is the binary outcome variable indicating whether individual $i$ voted in the 2006 primary election. $\rho$ is the spatial autoregressive coefficient that captures the degree of spatial dependence in voter turnout. $X_i$ is a vector of covariates including the treatment indicators (Civic Duty, Hawthorne, Self, Neighbors), neighborhood treatment intensity, and individual characteristics. The results from the SAR model are presented in Table 4 below:
-\input{../../Output/Tables/table4.tex}
 
-This table shows that the spatial autoregressive coefficient $\rho$ is negative and statistically insignificant, indicating that there is no spatial correlation in voter turnout. The results are similar to the OLS results, with all treatment groups having a positive and statistically significant effect on voter turnout. The neighborhood treatment intensity also has a negative and statistically significant effect on voter turnout, further supporting the lack of positive diffusion effects.
+\begin{table}[H]
+    \centering
+    \input{../../Output/Tables/table5.tex}
+\end{table}
+
+This table shows that the spatial autoregressive coefficient $\rho$ is negative and statistically insignificant, indicating that there is no spatial correlation in voter turnout. The results are similar to the OLS results, with all treatment groups having similar estimates as the OLS model with the interaction terms. Once again, without reliable estimates for both $\beta_1$ and $\beta_2$, we cannot compute the transmission rate $\lambda$. Therefore, the SAR model corroborates the OLS findings of no significant diffusion effects from social pressure treatments on voter turnout.
 
 \subsection{Regularization}
 To further support our findings and to regularize our estimates, we will use LASSO and Ridge regressions. The regression model is specified as:
@@ -307,20 +285,20 @@ To further support our findings and to regularize our estimates, we will use LAS
 \end{align*}
 Where $X_i$ is a vector of covariates that includes sex, year of birth, previous voting history for the years 2000, 2002 and 2004 and census-level neighbourhood data such as education, race, etc. Results from the LASSO and Ridge regressions are presented in Table 4.
 
-Both LASSO and Ridge regression arrived at consistent coefficient estimates. The Neighbors treatment has the most effect with a LASSO coefficient of 0.1055, followed by Self (0.0734) and Civic Duty (0.0220). Consistent with the OLS, the coefficient of the Hawthorn treatment was reduced to 0 and the effect was entirely captured by the interaction term. The coefficient of the neighborhood intensity is negative (-0.0183) and consistent. 
+Both LASSO and Ridge regression arrived at consistent coefficient estimates. The Neighbors treatment has the most effect with a LASSO coefficient of 0.1055, followed by Self (0.0734) and Civic Duty (0.0220). Consistent with the OLS, the coefficient of the Hawthorne treatment was reduced to 0 and the effect was entirely captured by the interaction term (0.0420). The coefficient of the neighborhood intensity is negative (-0.0183) and consistent. 
 
 Furthermore, the regularization explicitly selected interaction terms, revealing heterogeneity in diffusion: the interaction between Hawthorne and Intensity is the strongest (0.0420), followed by Neighbors (0.0183) and Civic Duty (0.0063). In contrast, the interaction for the Self treatment is effectively zero (-0.0005), suggesting that intrinsic motivation does not benefit from social reinforcement in the same way as external pressure. The LASSO and Ridge regression coefficient paths are plotted below:\begin{figure}[H]
     \centering
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{../../Output/Plots/figure4a.png}
+        \includegraphics[width=\linewidth]{../../Output/Plots/figure3a.png}
         \vspace{0.3em}
         {\small LASSO coefficient path}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{../../Output/Plots/figure4b.png}
+        \includegraphics[width=\linewidth]{../../Output/Plots/figure3b.png}
         \vspace{0.3em}
         {\small Ridge coefficient path}
     \end{minipage}
@@ -328,22 +306,23 @@ Furthermore, the regularization explicitly selected interaction terms, revealing
     \label{fig:coef_paths}
 \end{figure}
 
-
 \subsection{Machine Learning Methods}
 \subsubsection{Regression Trees and Random Forests}
-The results from the random tree are presented below:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{../../Output/Plots/figure5.png}   
-    \caption{Regression Tree}
-    \label{fig:regression_tree}
-\end{figure}
+The results from the random tree are presented on the next page:
+\begin{landscape}
+    \begin{figure}[p]
+        \centering
+        \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{../../Output/Plots/figure4.png}   
+        \caption{Regression Tree}
+        \label{fig:regression_tree}
+    \end{figure}
+\end{landscape}
 The regression tree shows that the age, previous voting history and the Neighbors treatment are the most important variables in prediction. The regression tree also does not show that intensity of the treatment in the neighborhood is an important variable to be a leading predictor for the outcome variable.  Another surprising result was that the median age in the neighborhood was an important predictor. This suggests either that older neighborhoods are more civically engaged or that older individuals influence younger individuals to vote.
 
 The random forest importance matrix presented similar variables as the most important. The variable importance plot is presented below:
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{../../Output/Plots/figure6.png}   
+    \includegraphics[width=0.98\textwidth]{../../Output/Plots/figure5.png}   
     \caption{Random Forest Variable Importance Plot}
     \label{fig:random_forest}
 \end{figure}
@@ -354,133 +333,45 @@ Bagging and boosting models were also trained on the same data. For bagging, 300
 
 Bagging and an accuracy of 0.617 with a log loss of 0.639 and MSE of 0.225. Boosting achieved an accuracy of 0.696 with a log loss of 0.583 and MSE of 0.199. The sequential nature of boosting allows it to capture complex patterns in the data better than the other ensemble methods.
 
+The results from the ensemble methods are presented below:
+\input{../../Output/Tables/table6_ml.tex}
+
 \subsubsection{Inverse Probability Weighting}
 Average Treatment Effect (ATE) was estimated using Propensity Score Matching (PSM) and Inverse Probability Weighting (IPW) to account for confounding variables. Results are presented below:
+\input{../../Output/Tables/table6.tex}
+\textit{Note:} Both IPW and PSM use multinomial propensity scores estimated via multinomial logistic regression. PSM uses 1-nearest neighbor matching with caliper = 0.2.
 
-\begin{table}[htbp]
-\centering
-\caption{Comparison of IPW and PSM Estimates}
-\label{tab:ipw_psm_comparison}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Treatment} & \textbf{IPW} & \textbf{PSM} & \textbf{Difference} \\
-\textbf{Group} & \textbf{ATE} & \textbf{ATE} & \textbf{(PSM-IPW)} \\
-\hline
-Civic Duty  & 0.0175 & 0.0534 & 0.0359 \\
-Hawthorne   & 0.0247 & 0.0601 & 0.0354 \\
-Self        & 0.0478 & 0.0838 & 0.0359 \\
-Neighbors   & 0.0814 & 0.1198 & 0.0384 \\
-\bottomrule
-\end{tabular}
-
-\medskip
-
-\footnotesize
-\textit{Notes:} Both IPW and PSM use multinomial propensity scores estimated via multinomial logistic regression. PSM uses 1-nearest neighbor matching with caliper = 0.2.
-\end{table}
 
 The IPW estimates are closely aligned with the original results that were presented in the paper. The propensity score matching ATE is vastly overstated. IPW weights observations by the inverse of their treatment probability. So even when propensity scores are constant across individuals, as they are here, IPW remains valid because these constant probabilities still contain information. 
 
 In contrast, PSM relies on variation in propensity scores to distinguish good matches from poor matches. When propensity scores are constant, as they are, under perfect randomization, the matching distance between any treated unit and any control unit is zero. Therefore, PSM degenerates into random matching rather than matching on covariate similarity, introducing bias and adding spurious correlations. 
 
 For our research question with treatment intensity, the following results were obtained:
-\begin{table}[htbp]
-\centering
-\caption{Treatment Intensity Effects: IPW vs. PSM Estimates}
-\label{tab:intensity_comparison}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Method} & \textbf{ATE} & \textbf{SE} & \textbf{95\% CI Lower} & \textbf{95\% CI Upper} \\
-\hline
-IPW & 0.0019 & 0.0024 & $-0.0029$ & 0.0066 \\
-PSM & 0.0552 & 0.0023 & 0.0507 & 0.0597 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{../../Output/Tables/table7.tex}
 
-A positivty check was performed and the distribution of propensity scores across treatment groups showed sufficient overlap, satisfying the common support assumption. The positivity check plot is presented in the appendix.
+A positivity check was performed and the distribution of propensity scores across treatment groups showed sufficient overlap, satisfying the common support assumption. The positivity check plot is presented in the appendix.
 
 IPW presents a null treatment intensity effect that provides no evidence of information diffusion. If social pressure spread through word-of-mouth or observation, we would expect treated individuals in high-intensity neighborhoods to show higher turnout due to spillover effects. The absence of this effect suggests social pressure operates primarily through direct treatment exposure rather than neighborhood contagion.
 
 \subsubsection{S-Learner, T-Learner, X-Learner}
 The ATE estimates using the S learners, T learners, and X learners are presented below:
-\begin{table}[htbp]
-\centering
-\begin{threeparttable}
-\caption{Summary of Treatment Effect Estimates}
-\label{tab:xgboost_results}
-\begin{tabular}{lcccccc}
-\toprule
-\multirow{2}{*}{\textbf{Treatment}} & \multicolumn{3}{c}{\textbf{ATE Estimates}} & \multicolumn{3}{c}{\textbf{Pairwise CATE Difference}} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7}
- & \textbf{S-Learner} & \textbf{T-Learner} & \textbf{X-Learner} & \textbf{S vs T} & \textbf{S vs X} & \textbf{T vs X} \\
-\midrule
-Civic Duty & 0.0185 & 0.0186 & 0.0186 & 0.0309 & 0.0262 & 0.0134 \\
-Hawthorne  & 0.0252 & 0.0251 & 0.0251 & 0.0305 & 0.0263 & 0.0133 \\
-Self       & 0.0474 & 0.0477 & 0.0476 & 0.0322 & 0.0283 & 0.0138 \\
-Neighbors  & 0.0801 & 0.0798 & 0.0798 & 0.0311 & 0.0269 & 0.0133 \\
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Notes:} Pairwise CATE Difference is the Mean Absolute Error (MAE) between the CATE estimates of the two models. All models use XGBoost as the base regressor.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
+\input{../../Output/Tables/table8.tex}
+\textit{Notes:} Pairwise model different is the Mean Absolute Error (MAE) between the CATE estimates of the two models. All models use XGBoost as the base regressor.
 
 In order to understand the heterogeneity of treatment effects and the information diffusion process, we will analyze the average CATE estimates from the X-Learner model across 3 subgroups of treatment intensity. Results are presented below:
-\begin{table}[htbp]
-\centering
-\begin{threeparttable}
-\caption{ATE By Treatment Intensity}
-\label{tab:intensity_xlearner}
-\begin{tabular}{@{}l ccc@{}}
-\toprule
-\textbf{Treatment Arm} & \multicolumn{3}{c}{\textbf{Treatment Intensity}} \\
-\cmidrule(lr){2-4}
- & \textbf{Low} & \textbf{Mid} & \textbf{High} \\
-\midrule
-Civic Duty & 0.0146 & 0.0207 & 0.0206 \\
-Hawthorne  & 0.0222 & 0.0289 & 0.0243 \\
-Self       & 0.0441 & 0.0483 & 0.0504 \\
-Neighbors  & 0.0743 & 0.0870 & 0.0780 \\
-\bottomrule
-\end{tabular}
-\end{threeparttable}
-\end{table}
+\input{../../Output/Tables/table9.tex}
 
-The findings from the three meta learners and the analysis of the treatment heterogeneity show that there is a stability of the average treatment effect across different modeling approaches. The choice of meta learner does not alter the conclusion that social pressure works. Where the models do disagre are on the individual level prediction shown by the pairwise Kate differences on the right side of Table 7. This is probably because the S learner pools the treated and control into a single machine learning model, potentially missing out on heterogeneity, while the T learner and X learner do not. Using X learner, we have also tried to analyze how the effect changes based on treatment density in different groups.
-
-The results are interesting as milder treatments such as Civic Duty, Hawthorne, and Self show a clearly positive correlation, while the Neighbors treatment shows an inverted U relationship. The highest treatment effect was found in the mid-treatment intensity group. The most likely explanation for that is that individuals were actually discouraged from voting if they knew that their voting record was public amongst their neighbors, or did not feel the social pressure to vote if everybody received the treatment. The implications of the CATE differences highlight that the optimal strategy to increase voter turnout is to have a moderate intensity of the treatment.
+The findings from the three meta learners and the analysis of the treatment heterogeneity show that there is a stability of the average treatment effect across different modeling approaches. The choice of meta learner does not alter the conclusion that social pressure works. Where the models do disagree are on the individual level prediction shown by the pairwise CATE differences on the right side of Table 7. This is probably because the S learner pools the treated and control into a single machine learning model, potentially missing out on heterogeneity, while the T learner and X learner do not. Using X learner, we have also tried to analyze how the effect changes based on treatment density in different groups.
 
 \subsubsection{Doubly Robust Models}
 The results from a doubly robust estimator for the treatment variables are presented below:
-
-\begin{table}[H] 
+\begin{table}[H]
 \centering
-\begin{threeparttable}
 \caption{Treatment Effects on Voter Turnout: Doubly Robust Estimates vs. Original Paper}
-\label{tab:dr_results}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Treatment} & \textbf{DR ATE} & \textbf{Paper ATE} & \textbf{Difference} \\
-\midrule
-Civic Duty   & 0.0183 & 0.0180 & $0.0003$ \\
-             & (0.0132, 0.0232) & & \\
-Hawthorne    & 0.0253 & 0.0260 & $-0.0007$ \\
-             & (0.0205, 0.0305) & & \\
-Self         & 0.0485 & 0.0490 & $-0.0005$ \\
-             & (0.0432, 0.0534) & & \\
-Neighbors    & 0.0816 & 0.0810 & $0.0006$ \\
-             & (0.0765, 0.0864) & & \\
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Notes:} Our DR estimates use logistic regression for propensity scores and linear regression for outcome models. 95\% confidence intervals shown in parentheses, computed via bootstrap with 1000 iterations. 
-\end{tablenotes}
-\end{threeparttable}
+\input{../../Output/Tables/table10.tex}
 \end{table}
+\textit{Note:} Our DR estimates use logistic regression for propensity scores and linear regression for outcome models. 95\% confidence intervals shown in parentheses, computed via bootstrap with 1000 iterations. The Interaction Effect column reflects the interaction between treatment assignment and neighborhood treatment intensity.
+
 
 The treatment intensity has also been estimated using the doubly robust estimator, with results presented below: 
 
@@ -488,61 +379,50 @@ The treatment intensity has also been estimated using the doubly robust estimato
 \centering
 \caption{Treatment Effects by Neighborhood Intensity: Doubly Robust Estimates}
 \label{tab:ate_by_intensity}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Treatment Arm} & \multicolumn{3}{c}{\textbf{Treatment Intensity}} \\
-\cmidrule(lr){2-4}
- & \textbf{Low} & \textbf{Mid} & \textbf{High} \\
-\hline
-Civic Duty  & 0.0148 & 0.0206 & 0.0193 \\
-Hawthorne   & 0.0254 & 0.0275 & 0.0241 \\
-Self        & 0.0435 & 0.0504 & 0.0511 \\
-Neighbors   & 0.0764 & 0.0890 & 0.0796 \\
-\bottomrule
-\end{tabular}
+\input{../../Output/Tables/table11.tex}
 \end{table}
 
 
 
-Intensity levels are: Low (0.00--0.44), Mid (0.44--0.45), High (0.45--1.00) of treatment intensity with a high concetration at 0.44-0.45. The results from the doubly robust estimator reveal a non-monotonic, inverted U relationship for three of the four treatments with effects peaking in the mid-intensity neighborhoods rather than the high-intensity ones. This contradicts simple information diffusion models which often predict monotonic increases with neighbourhood exposure. This suggests complex social dynamics where moderate intensity actually creates optimal conditions for social pressure. 
+Intensity levels are: Low (0.00--0.44), Mid (0.44--0.45), High (0.45--1.00) of treatment intensity with a high concentration at 0.44-0.45. The results from the doubly robust estimator reveal a non-monotonic, inverted U relationship for three of the four treatments with effects peaking in the mid-intensity neighborhoods rather than the high-intensity ones. This contradicts simple information diffusion models which often predict monotonic increases with neighbourhood exposure. This suggests complex social dynamics where moderate intensity actually creates optimal conditions for social pressure. 
 
 The only exception is the self-treatment which shows household members their own voting records but does not publicize neighbor information. The monotonic relationship indicates that voter turnout increases as neighborhood treatment density rises, suggesting that household-level social pressure benefits from a general pro-voting atmosphere without suffering from the saturation effects that affect neighborhood-level treatments
 
 \subsubsection{Double Machine Learning \& Causal Forest}
  The results from the non-linear Double ML model are presented below:
-    \begin{table}[htbp]
+    \begin{table}[H]
     \centering
     \caption{Treatment Effects on Voter Turnout: Causal Forest Double ML Estimates}
-    \label{tab:cf_dml}
     \begin{tabular}{lccccc}
-    \toprule
-    Treatment & CF DML ATE & SE & CATE Std & Paper ATE & Difference \\
-    \midrule
-    Civic Duty & 0.0180 & 0.0000 & 0.0063 & 0.0180 & 0.0000 \\
-    Hawthorne  & 0.0253 & 0.0000 & 0.0084 & 0.0260 & $-$0.0007 \\
-    Self       & 0.0478 & 0.0000 & 0.0100 & 0.0490 & $-$0.0012 \\
-    Neighbors  & 0.0810 & 0.0000 & 0.0143 & 0.0810 & 0.0000 \\
-    \bottomrule
+        \toprule
+        Treatment & CF DML ATE & SE & CATE Std & Paper ATE & Difference \\
+        \midrule
+        Civic Duty & 0.0180 & 0.0000 & 0.0063 & 0.0180 & 0.0000 \\
+        Hawthorne & 0.0253 & 0.0000 & 0.0084 & 0.0260 & $-0.0007$ \\
+        Self & 0.0478 & 0.0000 & 0.0100 & 0.0490 & $-0.0012$ \\
+        Neighbors & 0.0810 & 0.0000 & 0.0143 & 0.0810 & 0.0000 \\
+        \bottomrule
     \end{tabular}
+    \label{tab:cf_dml_estimates}
     \end{table}
 
     The treatment intensity ATE estimates from the non-linear Double ML model also closely align with those reported by the linear double ML model:
-    \begin{table}[htbp]
+    \begin{table}[H]
     \centering
     \caption{Treatment Effects by Neighborhood Intensity: Causal Forest Double ML Estimates}
-    \label{tab:cf_dml_intensity}
     \begin{tabular}{lccc}
-    \toprule
-    Treatment & \multicolumn{3}{c}{Treatment Intensity} \\
-    \cmidrule(lr){2-4}
-            & Low & Mid & High \\
-    \midrule
-    Civic Duty & 0.0147 & 0.0210 & 0.0194 \\
-    Hawthorne  & 0.0256 & 0.0260 & 0.0241 \\
-    Self       & 0.0435 & 0.0502 & 0.0507 \\
-    Neighbors  & 0.0748 & 0.0892 & 0.0789 \\
-    \bottomrule
+        \toprule
+        Treatment & \multicolumn{3}{c}{Treatment Intensity} \\
+        \cmidrule(lr){2-4}
+         & Low & Mid & High \\
+        \midrule
+        Civic Duty & 0.0147 & 0.0210 & 0.0194 \\
+        Hawthorne & 0.0256 & 0.0260 & 0.0241 \\
+        Self & 0.0435 & 0.0502 & 0.0507 \\
+        Neighbors & 0.0748 & 0.0892 & 0.0789 \\
+        \bottomrule
     \end{tabular}
+    \label{tab:intensity_effects}
     \end{table}
 
     The results from both the non-linear Double ML models indicate that the treatment effects on voter turnout are consistent across different modeling approaches. The estimates closely match those reported in the original study, suggesting robustness in the findings. The treatment intensity is also robust and aligns with the findings from the meta learners and the Doubly Robust estimator. This consistency across models strengthens the validity of the conclusions drawn regarding the impact of social pressure treatments on voter turnout.
@@ -557,7 +437,9 @@ Across all estimation approaches, the direct treatment effects remain remarkably
 
 Contrary to our initial hypothesis, we find no evidence of positive spillover effects from treated neighbors to untreated individuals. The coefficient on neighborhood treatment intensity is consistently negative across OLS (-0.0167), spatial autoregression (-0.0157), and LASSO (-0.0183), while IPW produces a null effect (0.0019, not significant). 
 
-Perhaps the most striking finding is the inverted-U relationship between neighborhood treatment intensity and treatment effects. The Self treatment is the exception, showing monotonically increasing effects from 4.4 to 5.1 percentage points as intensity rises. This makes theoretical sense: the Self treatment operates through private shame rather than public social pressure.
+Interpreting these findings through our structural framework reveals why the linear OLS and SAR models failed to capture $\lambda$ reliably. The structural model assumed a constant transmission rate $\lambda$ and a constant infection probability $\eta$. However, the machine learning results discovered a clear violation of this assumption, the inverted U relationship that indicated that $\eta$ is not constant but a function of treatment density ($\eta(K)$).
+
+The inverted-U relationship between neighborhood treatment intensity and treatment effects is the most striking finding. The Self treatment is the exception, showing monotonically increasing effects from 4.4 to 5.1 percentage points as intensity rises. This makes theoretical sense: the Self treatment operates through private shame rather than public social pressure.
 
 The inverted-U pattern for public pressure treatments suggests complex social dynamics. At low intensity, social pressure lacks any effect. At moderate intensity, treated neighbors create visible norms without overwhelming individual responsibility. At high intensity, the treatment becomes ubiquitous, potentially triggering the free-rider problem where individuals feel less compelled to vote themselves.
 
@@ -568,28 +450,47 @@ The experiment does have several limitations that we would like to acknowledge h
 \section{Conclusion}
 This paper investigates not just whether social pressure increases voter turnout, but how it diffuses through neighborhoods. Using a variety of econometric and machine learning methods, we analyze data from a large-scale field experiment on social pressure and voting behavior.
 
-Our analysis yields three main findings. First, the direct treatment effects documented by \cite{gerber_social_2008} are robus across a variety of econometric methods. Second, contrary to our initial hypothesis, we find no evidence of positive information diffusion from treated to untreated neighbors. The coefficient on neighborhood treatment intensity is consistently negative or null across specifications, suggesting that social pressure operates primarily through direct exposure rather than neighborhood contagion. One interpretation is free-riding: individuals in heavily treated neighborhoods may perceive less personal responsibility to vote when many neighbors are already mobilized.
+Our analysis yields three main findings that directly map to the structural parameters of our theoretical model. First, we find robust estimates for the direct infection probability consistent with the results presented by \cite{gerber_social_2008}. Across all specifications, the direct mailing treatments significantly increase the probability of voting, with the Neighbors treatment generating the highest effect (or direct infection rate $\eta_{Neighbors} \approx 8\%$).
 
-Third, we uncover an inverted U relationship between treatment intensity and effect. For most treatments, effects peaked at moderate neighborhood intensity rather than at the highest levels.
+Second, regarding the transmission rate $\lambda$, we reject our initial hypothesis of a universally positive diffusion effect. For the Civic Duty, Self, and Neighbors treatments, the structural parameter is statistically indistinguishable from zero, indicating no meaningful spillover to untreated neighbors. This suggests that for most forms of social pressure, the infection is contained within the household and does not diffuse to untreated neighbors. 
+
+Third, we identify a crucial exception that validates the structural importance of social context. The Hawthorne treatment is almost entirely driven by the interaction term, implying a high positive indirect effect on the neighbors. Conversely, for the neighbors treatment, there is an inverted u shaped pattern discovered by machine learning estimates. The effect is higher at moderate intensities but lowers at low and high intensities. This highlights that social pressure acts as a contagion only up to a saturation point, beyond which free riding takes over.
 
 These findings have important implications for understanding how social pressure campaigns function. They suggest that while direct appeals can effectively mobilize voters, simply saturating a neighborhood with treatment may not yield additional benefits and could even backfire due to free-riding dynamics. Future campaigns should consider targeting moderate intensity levels to optimize turnout effects.
 \section{Future Steps}
 We can explore other models and supplementary data to further validate our findings. Analysis of similar field experiments with clearly identifiable social networks can help corroborate our results. Additional extensions can include exploring social media data (such as X (formerly Twitter)) to see how information diffusion effects spread in the modern age where spatial proximity is less relevant. \cite{chetty_social_2022} created a new measure of economic connectedness, social cohesion and civic engagement using Facebook data. The data is from 2022, however, and may not be directly comparable to the 2006 data used in this study. But it does provide a useful framework for future research on social pressure and information diffusion effects in the digital age.
-
 \pagebreak
-\section*{Appendix 1: Positivity Check Plot}
+\section*{Appendix 1: OLS Block Clustered Results}
+\begin{table}[H]
+    \centering
+    \caption{OLS Regression Results with Block Clustered Standard Errors}
+    \vspace{-0.3cm}
+    \input{../../Output/Tables/table3_block.tex}
+    \label{tab:ols_diffusion_block}
+\end{table}
+\pagebreak
+\section*{Appendix 2: Positivity Check Plot}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{../../Output/Plots/positivity_check_all_treatments.png}   
+    \includegraphics[width=1\textwidth]{../../Output/Plots/figure6.png}   
     \caption{Positivity Check Plot}
     \label{fig:positivity_check}
 \end{figure}
 
 \pagebreak
-\section*{Appendix 2: Cumulative Gain Plots}
+\section*{Appendix 3: Bootstrapped ATEs}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{../../Output/Plots/cumulative_gain_dml.png}   
+    \includegraphics[width=1\textwidth]{../../Output/Plots/figure7.png}   
+    \caption{Bootstrapped ATEs for Treatment Effects}
+    \label{fig:bootstrapped_ates}
+\end{figure}
+\pagebreak
+
+\section*{Appendix 4: Cumulative Gain Plots}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../../Output/Plots/figure8.png}   
     \caption{Cumulative Gain Plot for Treatment Effects}
     \label{fig:cumulative_gain}
 \end{figure}
